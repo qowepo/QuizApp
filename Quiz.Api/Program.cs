@@ -12,9 +12,22 @@ var connectionString = builder.Configuration
     ?? throw new InvalidOperationException(
         "Connection string 'PostgreSql' was not found.");
 
+var allowedOrigins = builder.Configuration
+    .GetSection("Cors:AllowedOrigins")
+    .Get<string[]>()
+    ?? [];
+
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("QuizClient", policy =>
+        policy
+            .WithOrigins(allowedOrigins)
+            .AllowAnyHeader()
+            .AllowAnyMethod());
+});
 
 // Регистрируем все MediatR-хендлеры из сборки Application.
 builder.Services.AddMediatR(configuration =>
@@ -35,6 +48,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseCors("QuizClient");
 app.MapControllers();
 
 app.Run();

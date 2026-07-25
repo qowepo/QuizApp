@@ -1,0 +1,20 @@
+.quiz-session {
+    min-height: calc(100vh - 4rem);
+}
+
+.loading-indicator {
+    display: flex;
+    justify-content: center;
+    padding: 2rem;
+}
+
+.ideal-answer-card {
+    background: color-mix(in srgb, var(--mud-palette-success) 10%, white);
+    border: 1px solid color-mix(in srgb, var(--mud-palette-success) 35%, transparent);
+    border-left: 5px solid var(--mud-palette-success);
+}
+
+.answer-text {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}

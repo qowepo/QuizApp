@@ -14,6 +14,7 @@ namespace Quiz.Api.Controllers;
 [Route("api/quiz")]
 public sealed class QuizController : ControllerBase
 {
+    private const string UserIdHeaderName = "X-User-Id";
     private readonly IMediator _mediator;
 
     public QuizController(IMediator mediator)
@@ -24,11 +25,11 @@ public sealed class QuizController : ControllerBase
     /// <summary>
     /// Возвращает до пяти вопросов выбранной темы без эталонных ответов.
     /// </summary>
-    [HttpGet("start")]
+    [HttpGet("{topic}/start")]
     [ProducesResponseType<IReadOnlyList<QuizQuestionDto>>(StatusCodes.Status200OK)]
     public async Task<ActionResult<IReadOnlyList<QuizQuestionDto>>> Start(
-        [FromQuery] string userId,
-        [FromQuery] Topic topic,
+        [FromRoute] Topic topic,
+        [FromHeader(Name = UserIdHeaderName)] string userId,
         CancellationToken cancellationToken)
     {
         var questions = await _mediator.Send(
@@ -45,11 +46,12 @@ public sealed class QuizController : ControllerBase
     [ProducesResponseType<SubmitAnswerResult>(StatusCodes.Status200OK)]
     public async Task<ActionResult<SubmitAnswerResult>> SubmitAnswer(
         [FromBody] SubmitAnswerRequest request,
+        [FromHeader(Name = UserIdHeaderName)] string userId,
         CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(
             new SubmitAnswerCommand(
-                request.UserId,
+                userId,
                 request.QuestionId,
                 request.AnswerText),
             cancellationToken);

@@ -1,0 +1,206 @@
+@page "/quiz"
+@inject QuizApiClient QuizApiClient
+
+<PageTitle>Quiz Session</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="quiz-session py-8">
+    @if (!string.IsNullOrWhiteSpace(errorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Class="mb-4">
+            @errorMessage
+        </MudAlert>
+    }
+
+    @if (questions is null)
+    {
+        <MudText Typo="Typo.h3" Align="Align.Center" GutterBottom="true">
+            Выберите тему
+        </MudText>
+        <MudText Typo="Typo.body1" Align="Align.Center" Class="mb-6">
+            Получите до пяти вопросов, на которые вы ещё не отвечали.
+        </MudText>
+
+        <MudGrid Spacing="3">
+            @foreach (var option in TopicOptions)
+            {
+                <MudItem xs="12" sm="6">
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               Size="Size.Large"
+                               FullWidth="true"
+                               Disabled="@isBusy"
+                               OnClick="@(() => StartQuizAsync(option.Topic))">
+                        @option.Label
+                    </MudButton>
+                </MudItem>
+            }
+        </MudGrid>
+
+        @if (isBusy)
+        {
+            <div class="loading-indicator">
+                <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
+            </div>
+        }
+    }
+    else if (currentIndex >= questions.Count)
+    {
+        <MudCard Class="pa-8 text-center">
+            <MudText Typo="Typo.h4" Color="Color.Success" GutterBottom="true">
+                @(questions.Count == 0 ? "Новых вопросов не осталось" : "Сессия успешно завершена!")
+            </MudText>
+            <MudText Typo="Typo.body1" Class="mb-6">
+                Вы можете выбрать другую тему или начать новую сессию.
+            </MudText>
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       OnClick="Restart">
+                Начать заново
+            </MudButton>
+        </MudCard>
+    }
+    else if (idealAnswer is null)
+    {
+        <MudCard Class="pa-6">
+            <MudText Typo="Typo.overline" Color="Color.Primary">
+                Вопрос @(currentIndex + 1) из @questions.Count
+            </MudText>
+            <MudText Typo="Typo.h5" Class="my-4">
+                @questions[currentIndex].Text
+            </MudText>
+
+            <MudTextField @bind-Value="currentAnswer"
+                          Label="Ваш ответ"
+                          Placeholder="Опишите решение своими словами..."
+                          Variant="Variant.Outlined"
+                          Lines="8"
+                          FullWidth="true" />
+
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       Class="mt-4"
+                       Disabled="@(isBusy || string.IsNullOrWhiteSpace(currentAnswer))"
+                       OnClick="SubmitAnswerAsync">
+                Отправить
+            </MudButton>
+        </MudCard>
+    }
+    else
+    {
+        <MudText Typo="Typo.overline" Color="Color.Primary">
+            Вопрос @(currentIndex + 1) из @questions.Count — разбор
+        </MudText>
+
+        <MudCard Class="pa-6 mb-4">
+            <MudText Typo="Typo.subtitle1" GutterBottom="true">
+                Ваш ответ
+            </MudText>
+            <MudText Typo="Typo.body1" Class="answer-text">
+                @currentAnswer
+            </MudText>
+        </MudCard>
+
+        <MudCard Class="pa-6 ideal-answer-card">
+            <MudText Typo="Typo.subtitle1" Color="Color.Success" GutterBottom="true">
+                Эталонный ответ
+            </MudText>
+            <MudText Typo="Typo.body1" Class="answer-text">
+                @idealAnswer
+            </MudText>
+        </MudCard>
+
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Success"
+                   Class="mt-4"
+                   OnClick="NextQuestion">
+            Следующий вопрос
+        </MudButton>
+    }
+</MudContainer>
+
+@code {
+    private static readonly TopicOption[] TopicOptions =
+    [
+        new(Topic.CSharp, "C#"),
+        new(Topic.EntityFramework, "Entity Framework Core"),
+        new(Topic.RabbitMQ, "RabbitMQ"),
+        new(Topic.PostgreSQL, "PostgreSQL"),
+        new(Topic.Architecture, "Architecture")
+    ];
+
+    private List<QuestionDto>? questions;
+    private int currentIndex = 0;
+    private string currentAnswer = string.Empty;
+    private string? idealAnswer = null;
+    private string? errorMessage;
+    private bool isBusy;
+
+    private async Task StartQuizAsync(Topic topic)
+    {
+        isBusy = true;
+        errorMessage = null;
+
+        try
+        {
+            questions = await QuizApiClient.StartQuizAsync(topic);
+            currentIndex = 0;
+            currentAnswer = string.Empty;
+            idealAnswer = null;
+        }
+        catch (HttpRequestException)
+        {
+            errorMessage = "Не удалось загрузить вопросы. Проверьте, что API запущен.";
+        }
+        finally
+        {
+            isBusy = false;
+        }
+    }
+
+    private async Task SubmitAnswerAsync()
+    {
+        if (questions is null ||
+            currentIndex >= questions.Count ||
+            string.IsNullOrWhiteSpace(currentAnswer))
+        {
+            return;
+        }
+
+        isBusy = true;
+        errorMessage = null;
+
+        try
+        {
+            idealAnswer = await QuizApiClient.SubmitAnswerAsync(
+                questions[currentIndex].Id,
+                currentAnswer);
+        }
+        catch (HttpRequestException)
+        {
+            errorMessage = "Не удалось сохранить ответ. Попробуйте ещё раз.";
+        }
+        finally
+        {
+            isBusy = false;
+        }
+    }
+
+    private void NextQuestion()
+    {
+        currentAnswer = string.Empty;
+        idealAnswer = null;
+        currentIndex++;
+        errorMessage = null;
+    }
+
+    private void Restart()
+    {
+        questions = null;
+        currentIndex = 0;
+        currentAnswer = string.Empty;
+        idealAnswer = null;
+        errorMessage = null;
+    }
+
+    private sealed record TopicOption(Topic Topic, string Label);
+}
