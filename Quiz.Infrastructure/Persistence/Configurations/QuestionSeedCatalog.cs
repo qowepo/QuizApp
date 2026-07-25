@@ -11,6 +11,7 @@ internal static class QuestionSeedCatalog
     public static readonly IReadOnlyList<QuestionSeedData> All =
         MvpQuestionSeed.All
             .Concat(SeniorQuestionSeed.All)
+            .Concat(CodeAnalysisQuestionSeed.All)
             .Select(ToQuestionSeedData)
             .OrderBy(item => item.Topic)
             .ThenBy(item => item.Sequence)
@@ -25,6 +26,7 @@ internal static class QuestionSeedCatalog
         return new QuestionSeedData(
             id,
             Read<Topic>(seed, seedType, "Topic"),
+            ReadOptional<Difficulty>(seed, seedType, "Difficulty") ??
             ResolveDifficulty(sequence),
             Read<string>(seed, seedType, "Text"),
             Read<string>(seed, seedType, "IdealAnswer"),
@@ -47,6 +49,21 @@ internal static class QuestionSeedCatalog
         }
 
         return value;
+    }
+
+    private static T? ReadOptional<T>(
+        object seed,
+        Type seedType,
+        string propertyName)
+        where T : struct
+    {
+        var property = seedType.GetProperty(
+            propertyName,
+            BindingFlags.Instance | BindingFlags.Public);
+
+        return property?.GetValue(seed) is T value
+            ? value
+            : null;
     }
 
     private static Difficulty ResolveDifficulty(int sequence)

@@ -228,8 +228,24 @@
 ::deep .question-text {
     position: relative;
     max-width: 800px;
+    white-space: pre-wrap;
     line-height: 1.35;
     font-weight: 700;
+}
+
+.code-question {
+    margin: 0;
+    padding: 1.25rem 1.35rem;
+    overflow-x: auto;
+    border: 1px solid #E1E2EC;
+    border-radius: 16px;
+    color: #292A3D;
+    background: #F7F7FC;
+    font-family: "Cascadia Code", "JetBrains Mono", Consolas, monospace;
+    font-size: clamp(0.9rem, 2vw, 1.05rem);
+    font-weight: 500;
+    line-height: 1.55;
+    tab-size: 4;
 }
 
 ::deep .question-hint {

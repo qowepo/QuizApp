@@ -193,9 +193,16 @@
 
                 <MudPaper Elevation="0" Class="question-card">
                     <div class="question-number">@((currentIndex + 1).ToString("00"))</div>
-                    <MudText Typo="Typo.h4" Class="question-text">
-                        @CurrentQuestion.Text
-                    </MudText>
+                    @if (IsCodeAnalysisQuestion)
+                    {
+                        <pre class="question-text code-question">@CurrentQuestion.Text</pre>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.h4" Class="question-text">
+                            @CurrentQuestion.Text
+                        </MudText>
+                    }
                     <MudText Typo="Typo.body2" Class="question-hint">
                         Выберите наиболее точный ответ. После выбора изменить его будет нельзя.
                     </MudText>
@@ -335,6 +342,9 @@
 
     private QuizQuestionDto CurrentQuestion =>
         questions![currentIndex];
+
+    private bool IsCodeAnalysisQuestion =>
+        CurrentQuestion.Text.Contains('\n');
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {

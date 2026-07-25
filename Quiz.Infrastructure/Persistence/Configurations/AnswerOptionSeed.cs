@@ -32,7 +32,7 @@ internal static class AnswerOptionSeed
                 {
                     var isCorrect = position == correctPosition;
                     var optionText = isCorrect
-                        ? question.IdealAnswer
+                        ? QuestionCorrectOptionCatalog.Get(question)
                         : distractors[distractorIndex++];
 
                     yield return new AnswerOptionSeedData(

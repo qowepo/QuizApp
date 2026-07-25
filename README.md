@@ -20,8 +20,14 @@ The interactive session has four stages:
 5. Reset personal progress whenever previously answered questions should be
    available again.
 
-The question bank includes 200 ready-to-use Senior and Senior+ questions:
-40 for each currently supported topic. The bank can be extended as topics evolve.
+The question bank includes 210 ready-to-use questions: 50 for C# and 40 for
+each other currently supported topic. The C# set also contains code-reading
+tasks about closures, asynchronous execution, concurrency, resource lifetimes,
+and exception handling. The bank can be extended as topics evolve.
+
+Answer choices use compact, comparable-length statements. The full explanation
+is deliberately shown only after submission, so its length cannot reveal the
+correct option in advance.
 
 ## Architecture
 
