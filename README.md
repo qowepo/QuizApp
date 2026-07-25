@@ -1,24 +1,21 @@
 # QuizApp
 
 QuizApp is a self-assessment platform for developers preparing for senior-level
-technical and architecture interviews. It helps users practice open-ended
-questions in areas such as C#, Entity Framework, RabbitMQ, PostgreSQL, and
-architecture patterns.
+technical and architecture interviews. It focuses on open-ended questions about
+C#, Entity Framework Core, RabbitMQ, PostgreSQL, and architecture patterns.
 
 ## Core idea
 
 A user selects a topic and receives up to five random questions. Questions that
-the user has answered before are excluded. The reference answer remains hidden
+the user has already answered are excluded. The reference answer remains hidden
 until the user's own answer has been submitted and saved.
 
-The intended API workflow is:
+The interactive session has four stages:
 
-1. `GET /api/quiz/{topic}/start` returns questions as `{ id, text }`.
-2. The user writes and submits an answer.
-3. `POST /api/quiz/answer` saves it and returns `{ idealAnswer }`.
-
-Until authentication is introduced, the client sends a stable anonymous user
-identifier in the `X-User-Id` header.
+1. Select a topic.
+2. Write and submit an answer.
+3. Compare it with the ideal answer.
+4. Continue until the batch is complete.
 
 ## Architecture
 
@@ -27,69 +24,57 @@ The solution follows Clean Architecture and Tactical Domain-Driven Design:
 - `Quiz.Domain` — rich domain model, aggregates, entities, business rules, and
   repository contracts.
 - `Quiz.Application` — CQRS use cases implemented with MediatR and DTO-based
-  responses.
-- `Quiz.Infrastructure` — Entity Framework Core, PostgreSQL mappings, and
-  repository implementations.
-- `Quiz.Api` — REST API and the composition root of the application.
-- `Quiz.Client` — Blazor WebAssembly UI built with MudBlazor.
+  results.
+- `Quiz.Infrastructure` — Entity Framework Core, SQLite mappings, migrations,
+  and repository implementations.
+- `Quiz.WebUI` — Blazor Web App in Interactive Server mode and the application
+  composition root.
 
-Dependencies point inward:
+The UI calls Application use cases directly through `IMediator`; no HTTP API is
+required inside this deployment.
 
 ```text
-Quiz.Api ───────────────┐
-  │                     │
-  ├── Quiz.Application ─┼──> Quiz.Domain
-  └── Quiz.Infrastructure ┘
+Quiz.WebUI ───────> Quiz.Application ───────> Quiz.Domain
+     │                                         ▲
+     └───────────> Quiz.Infrastructure ─────────┘
 ```
 
 ## Important business rules
 
-- A user must never receive a question they have already answered.
+- A user never receives a question they have already answered.
 - A quiz batch contains no more than five unique questions.
-- The ideal answer is never included in the initial question response.
+- The ideal answer stays hidden until the user's answer is saved.
 - A user can submit only one answer per question.
-- Database uniqueness protects the answer rule during concurrent requests.
+- A unique database index protects this rule during concurrent operations.
 
 ## Technology
 
-- .NET 8 / C#
-- ASP.NET Core Web API
+- .NET 8 and C#
+- Blazor Web App with Interactive Server rendering
+- MudBlazor
 - MediatR and CQRS
-- Entity Framework Core
-- PostgreSQL with Npgsql
-- Blazor WebAssembly and MudBlazor
+- Entity Framework Core 8
+- SQLite
 - Clean Architecture and Tactical DDD
 
-## Current status
+## Database
 
-The end-to-end quiz flow is implemented, including the Blazor topic selection,
-answer, review, and completion states. The next step is to add validation and
-centralized error handling, replace the anonymous browser identifier with
-authentication claims, and create the initial database migration.
+The SQLite connection string is:
 
-Build the solution with:
+```text
+Data Source=quiz.db
+```
+
+The path is resolved against the `Quiz.WebUI` content root. On startup,
+`Database.Migrate()` automatically creates `quiz.db` and applies every pending
+migration. The database file is intentionally excluded from Git.
+
+## Build and run
 
 ```powershell
 dotnet restore QuizApp.sln
 dotnet build QuizApp.sln
+dotnet run --project Quiz.WebUI
 ```
 
-Run the API and client in separate terminals:
-
-```powershell
-dotnet run --project Quiz.Api
-dotnet run --project Quiz.Client
-```
-
-For local development, keep the PostgreSQL password outside the repository by
-using .NET User Secrets:
-
-```powershell
-dotnet user-secrets set "ConnectionStrings:PostgreSql" `
-  "Host=localhost;Port=5432;Database=quiz_app;Username=postgres;Password=your-password" `
-  --project Quiz.Api
-```
-
-Production environments should provide the same value through the
-`ConnectionStrings__PostgreSql` environment variable or a dedicated secret
-store.
+Open the URL printed by ASP.NET Core and navigate to `/quiz`.

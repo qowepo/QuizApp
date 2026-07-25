@@ -5,7 +5,7 @@ using Quiz.Domain.Questions;
 namespace Quiz.Infrastructure.Persistence.Configurations;
 
 /// <summary>
-/// Описывает хранение агрегата Question в PostgreSQL.
+/// Описывает хранение агрегата Question в SQLite.
 /// </summary>
 internal sealed class QuestionConfiguration : IEntityTypeConfiguration<Question>
 {

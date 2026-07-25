@@ -5,7 +5,7 @@ using Quiz.Domain.Questions;
 namespace Quiz.Infrastructure.Persistence.Configurations;
 
 /// <summary>
-/// Описывает хранение ответов пользователей в PostgreSQL.
+/// Описывает хранение ответов пользователей в SQLite.
 /// </summary>
 internal sealed class UserAnswerConfiguration
     : IEntityTypeConfiguration<UserAnswer>
@@ -35,7 +35,6 @@ internal sealed class UserAnswerConfiguration
 
         builder.Property(answer => answer.CreatedAt)
             .HasColumnName("created_at")
-            .HasColumnType("timestamp with time zone")
             .IsRequired();
 
         // Ограничение БД защищает от повторного ответа при конкурентных запросах.
