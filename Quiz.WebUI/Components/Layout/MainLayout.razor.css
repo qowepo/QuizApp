@@ -23,6 +23,8 @@
     align-items: center;
     gap: 0.75rem;
     color: inherit;
+    flex-shrink: 0;
+    text-decoration: none;
 }
 
 .brand-mark {
@@ -54,9 +56,14 @@
     font-weight: 500;
 }
 
+.header-spacer {
+    flex: 1;
+}
+
 .main-navigation {
     display: flex;
     align-items: center;
+    flex-shrink: 0;
     gap: 0.5rem;
 }
 
@@ -95,8 +102,24 @@
     }
 
     .brand-copy small,
-    .main-navigation > ::deep .mud-button:first-child {
+    .main-navigation ::deep .home-nav-button {
         display: none;
+    }
+
+    .brand-mark {
+        width: 38px;
+        height: 38px;
+        border-radius: 12px;
+        font-size: 1.1rem;
+    }
+
+    .brand-copy strong {
+        font-size: 1rem;
+    }
+
+    .main-navigation ::deep .mud-button-root {
+        min-width: auto;
+        padding-inline: 0.85rem;
     }
 
     ::deep .app-content {

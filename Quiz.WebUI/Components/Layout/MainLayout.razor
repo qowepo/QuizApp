@@ -8,18 +8,21 @@
 <MudLayout>
     <MudAppBar Elevation="0" Fixed="true" Class="app-header">
         <div class="header-inner">
-            <MudLink Href="/" Underline="Underline.None" Class="brand">
+            <a href="/" class="brand" aria-label="QuizApp — главная">
                 <span class="brand-mark">Q</span>
                 <span class="brand-copy">
                     <strong>QuizApp</strong>
                     <small>Senior practice lab</small>
                 </span>
-            </MudLink>
+            </a>
 
-            <MudSpacer />
+            <span class="header-spacer" aria-hidden="true"></span>
 
             <nav class="main-navigation" aria-label="Главная навигация">
-                <MudButton Href="/" Variant="Variant.Text" Color="Color.Inherit">
+                <MudButton Href="/"
+                           Class="home-nav-button"
+                           Variant="Variant.Text"
+                           Color="Color.Inherit">
                     Главная
                 </MudButton>
                 <MudButton Href="/quiz"
