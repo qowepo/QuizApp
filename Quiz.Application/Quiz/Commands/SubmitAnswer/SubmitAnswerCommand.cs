@@ -8,4 +8,4 @@ namespace Quiz.Application.Quiz.Commands.SubmitAnswer;
 public sealed record SubmitAnswerCommand(
     string UserId,
     Guid QuestionId,
-    string AnswerText) : IRequest<SubmitAnswerResult>;
+    Guid AnswerOptionId) : IRequest<SubmitAnswerResult>;

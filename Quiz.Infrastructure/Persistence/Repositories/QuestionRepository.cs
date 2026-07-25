@@ -8,7 +8,7 @@ namespace Quiz.Infrastructure.Persistence.Repositories;
 /// </summary>
 public sealed class QuestionRepository : IQuestionRepository
 {
-    private const int MaxBatchSize = 5;
+    private const int MaxBatchSize = 10;
     private readonly AppDbContext _dbContext;
 
     public QuestionRepository(AppDbContext dbContext)
@@ -36,16 +36,47 @@ public sealed class QuestionRepository : IQuestionRepository
 
         var batchSize = Math.Min(count, MaxBatchSize);
 
-        return await _dbContext.Questions
+        var candidates = await _dbContext.Questions
             .AsNoTracking()
+            .Include(question => question.Options)
+            .AsSplitQuery()
             .Where(question =>
                 question.Topic == topic &&
                 !_dbContext.UserAnswers.Any(answer =>
                     answer.UserId == userId &&
                     answer.QuestionId == question.Id))
-            .OrderBy(_ => EF.Functions.Random())
-            .Take(batchSize)
             .ToListAsync(cancellationToken);
+
+        var selected = new List<Question>(batchSize);
+        var distribution = new (Difficulty Difficulty, int Count)[]
+        {
+            (Difficulty.Middle, 3),
+            (Difficulty.MiddlePlus, 3),
+            (Difficulty.Senior, 2),
+            (Difficulty.SeniorPlus, 2)
+        };
+
+        foreach (var (difficulty, targetCount) in distribution)
+        {
+            selected.AddRange(candidates
+                .Where(question =>
+                    question.Difficulty == difficulty &&
+                    !selected.Contains(question))
+                .OrderBy(_ => Random.Shared.Next())
+                .Take(Math.Min(targetCount, batchSize - selected.Count)));
+        }
+
+        if (selected.Count < batchSize)
+        {
+            selected.AddRange(candidates
+                .Where(question => !selected.Contains(question))
+                .OrderBy(_ => Random.Shared.Next())
+                .Take(batchSize - selected.Count));
+        }
+
+        return selected
+            .OrderBy(_ => Random.Shared.Next())
+            .ToArray();
     }
 
     public Task<Question?> GetByIdAsync(
@@ -54,6 +85,7 @@ public sealed class QuestionRepository : IQuestionRepository
     {
         return _dbContext.Questions
             .Include(question => question.Answers)
+            .Include(question => question.Options)
             .SingleOrDefaultAsync(
                 question => question.Id == questionId,
                 cancellationToken);

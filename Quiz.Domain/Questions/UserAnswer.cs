@@ -11,13 +11,17 @@ public sealed class UserAnswer : Entity<Guid>
         Guid id,
         Guid userId,
         Guid questionId,
+        Guid answerOptionId,
         string answerText,
+        bool isCorrect,
         DateTimeOffset createdAt)
         : base(id)
     {
         UserId = userId;
         QuestionId = questionId;
+        AnswerOptionId = answerOptionId;
         AnswerText = answerText;
+        IsCorrect = isCorrect;
         CreatedAt = createdAt;
     }
 
@@ -30,7 +34,11 @@ public sealed class UserAnswer : Entity<Guid>
 
     public Guid QuestionId { get; private set; }
 
+    public Guid? AnswerOptionId { get; private set; }
+
     public string AnswerText { get; private set; } = string.Empty;
+
+    public bool? IsCorrect { get; private set; }
 
     public DateTimeOffset CreatedAt { get; private set; }
 
@@ -41,7 +49,7 @@ public sealed class UserAnswer : Entity<Guid>
     internal static UserAnswer Create(
         Guid userId,
         Guid questionId,
-        string answerText,
+        AnswerOption answerOption,
         DateTimeOffset createdAt)
     {
         if (userId == Guid.Empty)
@@ -54,16 +62,20 @@ public sealed class UserAnswer : Entity<Guid>
             throw new ArgumentException("Question identifier cannot be empty.", nameof(questionId));
         }
 
-        if (string.IsNullOrWhiteSpace(answerText))
+        if (answerOption.QuestionId != questionId)
         {
-            throw new ArgumentException("Answer text cannot be empty.", nameof(answerText));
+            throw new ArgumentException(
+                "Answer option does not belong to the question.",
+                nameof(answerOption));
         }
 
         return new UserAnswer(
             Guid.NewGuid(),
             userId,
             questionId,
-            answerText.Trim(),
+            answerOption.Id,
+            answerOption.Text,
+            answerOption.IsCorrect,
             createdAt);
     }
 }

@@ -1,20 +1,21 @@
 # QuizApp
 
 QuizApp is a self-assessment platform for developers preparing for senior-level
-technical and architecture interviews. It focuses on open-ended questions about
+technical and architecture interviews. It focuses on scenario-based questions about
 C#, Entity Framework Core, RabbitMQ, PostgreSQL, and architecture patterns.
 
 ## Core idea
 
-A user selects a topic and receives up to five random questions. Questions that
-the user has already answered are excluded. The reference answer remains hidden
-until the user's own answer has been submitted and saved.
+A user selects a topic and receives up to ten random questions balanced across
+Middle, Middle+, Senior, and Senior+ levels. Questions that the user has already
+answered are excluded. Correctness and explanations remain hidden until an
+answer option has been selected and saved.
 
 The interactive session has four stages:
 
 1. Select a topic.
-2. Write and submit an answer.
-3. Compare it with the ideal answer.
+2. Select the most accurate of four technically plausible answers.
+3. Review green/red feedback and the detailed explanation.
 4. Continue until the batch is complete.
 5. Reset personal progress whenever previously answered questions should be
    available again.
@@ -47,8 +48,8 @@ Quiz.WebUI ───────> Quiz.Application ───────> Quiz.D
 ## Important business rules
 
 - A user never receives a question they have already answered.
-- A quiz batch contains no more than five unique questions.
-- The ideal answer stays hidden until the user's answer is saved.
+- A quiz batch contains no more than ten unique questions with mixed difficulty.
+- Correctness and explanations stay hidden until the selected option is saved.
 - A user can submit only one answer per question.
 - A unique database index protects this rule during concurrent operations.
 - Resetting progress deletes only the current user's answer history and does

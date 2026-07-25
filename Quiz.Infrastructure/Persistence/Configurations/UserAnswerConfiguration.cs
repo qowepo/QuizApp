@@ -28,10 +28,16 @@ internal sealed class UserAnswerConfiguration
             .HasColumnName("question_id")
             .IsRequired();
 
+        builder.Property(answer => answer.AnswerOptionId)
+            .HasColumnName("answer_option_id");
+
         builder.Property(answer => answer.AnswerText)
             .HasColumnName("answer_text")
             .HasColumnType("text")
             .IsRequired();
+
+        builder.Property(answer => answer.IsCorrect)
+            .HasColumnName("is_correct");
 
         builder.Property(answer => answer.CreatedAt)
             .HasColumnName("created_at")
@@ -41,5 +47,10 @@ internal sealed class UserAnswerConfiguration
         builder.HasIndex(answer => new { answer.UserId, answer.QuestionId })
             .IsUnique()
             .HasDatabaseName("ux_user_answers_user_id_question_id");
+
+        builder.HasOne<AnswerOption>()
+            .WithMany()
+            .HasForeignKey(answer => answer.AnswerOptionId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

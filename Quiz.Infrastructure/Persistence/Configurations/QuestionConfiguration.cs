@@ -25,6 +25,12 @@ internal sealed class QuestionConfiguration : IEntityTypeConfiguration<Question>
             .HasMaxLength(32)
             .IsRequired();
 
+        builder.Property(question => question.Difficulty)
+            .HasColumnName("difficulty")
+            .HasConversion<string>()
+            .HasMaxLength(24)
+            .IsRequired();
+
         builder.Property(question => question.Text)
             .HasColumnName("text")
             .HasColumnType("text")
@@ -43,11 +49,27 @@ internal sealed class QuestionConfiguration : IEntityTypeConfiguration<Question>
             .HasForeignKey(answer => answer.QuestionId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        builder.HasMany(question => question.Options)
+            .WithOne()
+            .HasForeignKey(option => option.QuestionId)
+            .OnDelete(DeleteBehavior.Cascade);
+
         // EF изменяет приватную коллекцию напрямую, не обходя методы агрегата.
         builder.Navigation(question => question.Answers)
             .HasField("_answers")
             .UsePropertyAccessMode(PropertyAccessMode.Field);
 
-        builder.HasData(MvpQuestionSeed.All.Concat(SeniorQuestionSeed.All));
+        builder.Navigation(question => question.Options)
+            .HasField("_options")
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
+
+        builder.HasData(QuestionSeedCatalog.All.Select(question => new
+        {
+            question.Id,
+            question.Topic,
+            question.Difficulty,
+            question.Text,
+            question.IdealAnswer
+        }));
     }
 }

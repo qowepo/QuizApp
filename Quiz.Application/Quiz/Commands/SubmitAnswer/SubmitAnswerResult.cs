@@ -1,6 +1,20 @@
 namespace Quiz.Application.Quiz.Commands.SubmitAnswer;
 
 /// <summary>
-/// Результат сохранения ответа, доступный для самопроверки пользователя.
+/// Результат проверки выбранного варианта.
 /// </summary>
-public sealed record SubmitAnswerResult(string IdealAnswer);
+public sealed record SubmitAnswerResult(
+    bool IsCorrect,
+    Guid SelectedOptionId,
+    Guid CorrectOptionId,
+    string DetailedExplanation,
+    IReadOnlyList<AnswerOptionReviewDto> Options);
+
+/// <summary>
+/// Разбор одного варианта, который раскрывается после ответа.
+/// </summary>
+public sealed record AnswerOptionReviewDto(
+    Guid Id,
+    string Text,
+    bool IsCorrect,
+    string Explanation);

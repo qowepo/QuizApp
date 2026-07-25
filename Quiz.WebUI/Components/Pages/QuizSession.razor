@@ -68,8 +68,8 @@
                     </MudText>
                     <h1>Что тренируем сегодня?</h1>
                     <MudText Typo="Typo.body1">
-                        Выберите направление. Мы случайно соберём пять вопросов,
-                        которых вы ещё не проходили.
+                        Выберите направление. Мы случайно соберём десять непройденных вопросов
+                        уровней Middle, Middle+, Senior и Senior+.
                     </MudText>
                 </header>
 
@@ -82,7 +82,7 @@
                                     <span class="topic-symbol @option.StyleClass">
                                         <MudIcon Icon="@option.Icon" />
                                     </span>
-                                    <span class="topic-amount">Senior / Senior+</span>
+                                    <span class="topic-amount">10 вопросов · 4 уровня</span>
                                 </div>
                                 <MudText Typo="Typo.h5">@option.Label</MudText>
                                 <MudText Typo="Typo.body2" Class="topic-description">
@@ -135,7 +135,7 @@
                     <h1>
                         @(questions.Count == 0
                             ? "Здесь всё пройдено"
-                            : $"Отличная работа: {questions.Count} из {questions.Count}")
+                            : $"Результат: {correctAnswers} из {questions.Count}")
                     </h1>
                     <MudText Typo="Typo.body1">
                         @(questions.Count == 0
@@ -171,9 +171,14 @@
                 <div class="session-progress">
                     <div class="progress-copy">
                         <div>
-                            <MudText Typo="Typo.overline" Color="Color.Primary">
-                                @selectedTopicLabel
-                            </MudText>
+                            <div class="question-meta">
+                                <MudText Typo="Typo.overline" Color="Color.Primary">
+                                    @selectedTopicLabel
+                                </MudText>
+                                <span class="difficulty-badge @GetDifficultyClass(CurrentQuestion.Difficulty)">
+                                    @GetDifficultyLabel(CurrentQuestion.Difficulty)
+                                </span>
+                            </div>
                             <MudText Typo="Typo.body2">
                                 Вопрос @(currentIndex + 1) из @questions.Count
                             </MudText>
@@ -186,81 +191,104 @@
                                        Size="Size.Medium" />
                 </div>
 
-                @if (idealAnswer is null)
-                {
-                    <MudPaper Elevation="0" Class="question-card">
-                        <div class="question-number">0@(currentIndex + 1)</div>
-                        <MudText Typo="Typo.h4" Class="question-text">
-                            @questions[currentIndex].Text
-                        </MudText>
-                        <MudText Typo="Typo.body2" Class="question-hint">
-                            Отвечайте так, как объясняли бы решение на техническом интервью.
-                        </MudText>
+                <MudPaper Elevation="0" Class="question-card">
+                    <div class="question-number">@((currentIndex + 1).ToString("00"))</div>
+                    <MudText Typo="Typo.h4" Class="question-text">
+                        @CurrentQuestion.Text
+                    </MudText>
+                    <MudText Typo="Typo.body2" Class="question-hint">
+                        Выберите наиболее точный ответ. После выбора изменить его будет нельзя.
+                    </MudText>
 
-                        <MudTextField @bind-Value="currentAnswer"
-                                      Label="Ваш ответ"
-                                      Placeholder="Сформулируйте основные идеи, компромиссы и примеры..."
-                                      Variant="Variant.Outlined"
-                                      Lines="9"
-                                      Immediate="true"
-                                      FullWidth="true"
-                                      Disabled="@isBusy"
-                                      Class="answer-input" />
+                    <div class="answer-options" role="group" aria-label="Варианты ответа">
+                        @for (var optionIndex = 0;
+                              optionIndex < CurrentQuestion.Options.Count;
+                              optionIndex++)
+                        {
+                            var option = CurrentQuestion.Options[optionIndex];
+                            var review = GetOptionReview(option.Id);
 
-                        <div class="question-actions">
-                            <MudText Typo="Typo.caption">
-                                Эталон откроется после сохранения ответа
-                            </MudText>
-                            <MudButton Variant="Variant.Filled"
-                                       Color="Color.Primary"
-                                       Size="Size.Large"
-                                       Disabled="@(isBusy || string.IsNullOrWhiteSpace(currentAnswer))"
-                                       EndIcon="@Icons.Material.Filled.ArrowForward"
-                                       OnClick="SubmitAnswerAsync">
-                                @(isBusy ? "Сохраняем..." : "Показать эталон")
-                            </MudButton>
-                        </div>
-                    </MudPaper>
-                }
-                else
-                {
-                    <div class="review-heading">
-                        <span class="review-badge">
-                            <MudIcon Icon="@Icons.Material.Filled.Visibility" Size="Size.Small" />
-                            Режим самопроверки
-                        </span>
-                        <MudText Typo="Typo.h4">Сравните ход мыслей</MudText>
+                            <button type="button"
+                                    class="answer-option @GetAnswerOptionClass(option.Id, review)"
+                                    disabled="@(isBusy || answerResult is not null)"
+                                    @onclick="@(() => SelectAnswerAsync(option.Id))">
+                                <span class="option-letter">@GetOptionLetter(optionIndex)</span>
+                                <span class="option-content">
+                                    <span class="option-text">@option.Text</span>
+                                    @if (review is not null)
+                                    {
+                                        <span class="option-explanation">
+                                            @review.Explanation
+                                        </span>
+                                    }
+                                </span>
+                                @if (review?.IsCorrect == true)
+                                {
+                                    <MudIcon Icon="@Icons.Material.Filled.CheckCircle"
+                                             Class="option-status-icon" />
+                                }
+                                else if (review is not null)
+                                {
+                                    <MudIcon Icon="@Icons.Material.Filled.Cancel"
+                                             Class="option-status-icon" />
+                                }
+                            </button>
+                        }
                     </div>
 
-                    <MudGrid Spacing="3">
-                        <MudItem xs="12" md="6">
-                            <MudPaper Elevation="0" Class="review-card user-answer-card">
-                                <MudText Typo="Typo.overline">Ваш ответ</MudText>
-                                <MudDivider Class="my-3" />
-                                <MudText Typo="Typo.body1" Class="answer-text">
-                                    @currentAnswer
+                    @if (isBusy)
+                    {
+                        <div class="answer-checking">
+                            <MudProgressCircular Indeterminate="true"
+                                                 Color="Color.Primary"
+                                                 Size="Size.Small" />
+                            <MudText Typo="Typo.body2">Проверяем ответ...</MudText>
+                        </div>
+                    }
+                </MudPaper>
+
+                @if (answerResult is not null)
+                {
+                    <section class="answer-review @(
+                                 answerResult.IsCorrect
+                                     ? "correct-review"
+                                     : "incorrect-review")">
+                        <div class="review-result">
+                            <span class="review-result-icon">
+                                <MudIcon Icon="@(answerResult.IsCorrect
+                                                  ? Icons.Material.Filled.Check
+                                                  : Icons.Material.Filled.Close)" />
+                            </span>
+                            <div>
+                                <MudText Typo="Typo.overline">
+                                    @(answerResult.IsCorrect
+                                        ? "Верный ответ"
+                                        : "Ответ неверный")
                                 </MudText>
-                            </MudPaper>
-                        </MudItem>
-                        <MudItem xs="12" md="6">
-                            <MudPaper Elevation="0" Class="review-card ideal-answer-card">
-                                <MudText Typo="Typo.overline" Color="Color.Success">
-                                    Эталонный ответ
+                                <MudText Typo="Typo.h5">
+                                    @(answerResult.IsCorrect
+                                        ? "Отлично — логика выбрана правильно."
+                                        : "Посмотрите разбор и сравните варианты.")
                                 </MudText>
-                                <MudDivider Class="my-3" />
-                                <MudText Typo="Typo.body1" Class="answer-text">
-                                    @idealAnswer
-                                </MudText>
-                            </MudPaper>
-                        </MudItem>
-                    </MudGrid>
+                            </div>
+                        </div>
+
+                        <MudDivider Class="my-4" />
+
+                        <MudText Typo="Typo.overline">
+                            Подробное объяснение
+                        </MudText>
+                        <MudText Typo="Typo.body1" Class="detailed-explanation">
+                            @answerResult.DetailedExplanation
+                        </MudText>
+                    </section>
 
                     <div class="review-actions">
                         <MudText Typo="Typo.body2">
-                            Отметьте для себя, какие аргументы стоит добавить в следующий раз.
+                            Красным отмечены отвлекающие варианты, зелёным — правильный.
                         </MudText>
                         <MudButton Variant="Variant.Filled"
-                                   Color="Color.Success"
+                                   Color="Color.Primary"
                                    Size="Size.Large"
                                    EndIcon="@Icons.Material.Filled.ArrowForward"
                                    OnClick="NextQuestion">
@@ -289,8 +317,9 @@
 
     private List<QuizQuestionDto>? questions;
     private int currentIndex;
-    private string currentAnswer = string.Empty;
-    private string? idealAnswer;
+    private Guid? selectedOptionId;
+    private SubmitAnswerResult? answerResult;
+    private int correctAnswers;
     private string? userId;
     private string? selectedTopicLabel;
     private string? errorMessage;
@@ -303,6 +332,9 @@
         questions is null || questions.Count == 0
             ? 0
             : (currentIndex + 1d) / questions.Count * 100d;
+
+    private QuizQuestionDto CurrentQuestion =>
+        questions![currentIndex];
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -362,8 +394,9 @@
 
             selectedTopicLabel = option.Label;
             currentIndex = 0;
-            currentAnswer = string.Empty;
-            idealAnswer = null;
+            selectedOptionId = null;
+            answerResult = null;
+            correctAnswers = 0;
         }
         catch (Exception exception)
         {
@@ -376,16 +409,18 @@
         }
     }
 
-    private async Task SubmitAnswerAsync()
+    private async Task SelectAnswerAsync(Guid answerOptionId)
     {
         if (userId is null ||
             questions is null ||
             currentIndex >= questions.Count ||
-            string.IsNullOrWhiteSpace(currentAnswer))
+            answerResult is not null ||
+            isBusy)
         {
             return;
         }
 
+        selectedOptionId = answerOptionId;
         isBusy = true;
         errorMessage = null;
 
@@ -395,14 +430,20 @@
                 new SubmitAnswerCommand(
                     userId,
                     questions[currentIndex].Id,
-                    currentAnswer));
+                    answerOptionId));
 
-            idealAnswer = result.IdealAnswer;
+            answerResult = result;
+
+            if (result.IsCorrect)
+            {
+                correctAnswers++;
+            }
         }
         catch (Exception exception)
         {
             Logger.LogError(exception, "Failed to submit a quiz answer.");
             errorMessage = "Не удалось сохранить ответ. Попробуйте ещё раз.";
+            selectedOptionId = null;
         }
         finally
         {
@@ -412,8 +453,8 @@
 
     private void NextQuestion()
     {
-        currentAnswer = string.Empty;
-        idealAnswer = null;
+        selectedOptionId = null;
+        answerResult = null;
         currentIndex++;
         errorMessage = null;
     }
@@ -422,8 +463,9 @@
     {
         questions = null;
         currentIndex = 0;
-        currentAnswer = string.Empty;
-        idealAnswer = null;
+        selectedOptionId = null;
+        answerResult = null;
+        correctAnswers = 0;
         selectedTopicLabel = null;
         errorMessage = null;
         successMessage = null;
@@ -459,8 +501,9 @@
 
             questions = null;
             currentIndex = 0;
-            currentAnswer = string.Empty;
-            idealAnswer = null;
+            selectedOptionId = null;
+            answerResult = null;
+            correctAnswers = 0;
             selectedTopicLabel = null;
             isResetConfirmationVisible = false;
             successMessage = deletedAnswers == 0
@@ -476,6 +519,58 @@
         {
             isBusy = false;
         }
+    }
+
+    private AnswerOptionReviewDto? GetOptionReview(Guid optionId)
+    {
+        return answerResult?.Options.SingleOrDefault(
+            option => option.Id == optionId);
+    }
+
+    private string GetAnswerOptionClass(
+        Guid optionId,
+        AnswerOptionReviewDto? review)
+    {
+        if (review is null)
+        {
+            return selectedOptionId == optionId
+                ? "selected pending"
+                : string.Empty;
+        }
+
+        var resultClass = review.IsCorrect ? "correct" : "incorrect";
+        var selectedClass = selectedOptionId == optionId ? " selected" : string.Empty;
+
+        return resultClass + selectedClass;
+    }
+
+    private static char GetOptionLetter(int index)
+    {
+        return (char)('A' + index);
+    }
+
+    private static string GetDifficultyLabel(Difficulty difficulty)
+    {
+        return difficulty switch
+        {
+            Difficulty.Middle => "Middle",
+            Difficulty.MiddlePlus => "Middle+",
+            Difficulty.Senior => "Senior",
+            Difficulty.SeniorPlus => "Senior+",
+            _ => difficulty.ToString()
+        };
+    }
+
+    private static string GetDifficultyClass(Difficulty difficulty)
+    {
+        return difficulty switch
+        {
+            Difficulty.Middle => "middle",
+            Difficulty.MiddlePlus => "middle-plus",
+            Difficulty.Senior => "senior",
+            Difficulty.SeniorPlus => "senior-plus",
+            _ => string.Empty
+        };
     }
 
     private sealed record TopicOption(

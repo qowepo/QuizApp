@@ -39,11 +39,24 @@ public sealed class SubmitAnswerCommandHandler
 
         var answer = question.AddAnswer(
             userId,
-            request.AnswerText,
+            request.AnswerOptionId,
             DateTimeOffset.UtcNow);
 
         await _questionRepository.SaveAnswerAsync(answer, cancellationToken);
 
-        return new SubmitAnswerResult(question.IdealAnswer);
+        var correctOption = question.Options.Single(option => option.IsCorrect);
+
+        return new SubmitAnswerResult(
+            answer.IsCorrect == true,
+            request.AnswerOptionId,
+            correctOption.Id,
+            question.IdealAnswer,
+            question.Options
+                .Select(option => new AnswerOptionReviewDto(
+                    option.Id,
+                    option.Text,
+                    option.IsCorrect,
+                    option.Explanation))
+                .ToArray());
     }
 }

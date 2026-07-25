@@ -9,7 +9,7 @@ namespace Quiz.Application.Quiz.Queries.GetQuizBatch;
 public sealed class GetQuizBatchQueryHandler
     : IRequestHandler<GetQuizBatchQuery, IReadOnlyList<QuizQuestionDto>>
 {
-    private const int BatchSize = 5;
+    private const int BatchSize = 10;
     private readonly IQuestionRepository _questionRepository;
 
     public GetQuizBatchQueryHandler(IQuestionRepository questionRepository)
@@ -35,7 +35,16 @@ public sealed class GetQuizBatchQueryHandler
             cancellationToken);
 
         return questions
-            .Select(question => new QuizQuestionDto(question.Id, question.Text))
+            .Select(question => new QuizQuestionDto(
+                question.Id,
+                question.Text,
+                question.Difficulty,
+                question.Options
+                    .OrderBy(_ => Random.Shared.Next())
+                    .Select(option => new QuizAnswerOptionDto(
+                        option.Id,
+                        option.Text))
+                    .ToArray()))
             .ToArray();
     }
 }

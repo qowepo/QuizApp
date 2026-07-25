@@ -15,6 +15,8 @@ public sealed class AppDbContext : DbContext
 
     public DbSet<Question> Questions => Set<Question>();
 
+    public DbSet<AnswerOption> AnswerOptions => Set<AnswerOption>();
+
     public DbSet<UserAnswer> UserAnswers => Set<UserAnswer>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
