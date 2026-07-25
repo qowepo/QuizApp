@@ -13,7 +13,8 @@ until the user's own answer has been submitted and saved.
 
 The intended API workflow is:
 
-1. `GET /api/quiz/{topic}/start` returns questions as `{ id, text }`.
+1. `GET /api/quiz/start?userId={userId}&topic={topic}` returns questions as
+   `{ id, text }`.
 2. The user writes and submits an answer.
 3. `POST /api/quiz/answer` saves it and returns `{ idealAnswer }`.
 
@@ -57,9 +58,10 @@ Quiz.Api ───────────────┐
 
 ## Current status
 
-The Domain, Application, and Infrastructure foundations are implemented. The
-next step is to configure dependency injection, expose the use cases through
-API endpoints, add validation, and create the initial database migration.
+The Domain, Application, Infrastructure, and API foundations are implemented.
+The next step is to add validation and centralized error handling, replace the
+temporary request-based user identifier with authentication claims, and create
+the initial database migration.
 
 Build the solution with:
 
@@ -67,3 +69,16 @@ Build the solution with:
 dotnet restore QuizApp.sln
 dotnet build QuizApp.sln
 ```
+
+For local development, keep the PostgreSQL password outside the repository by
+using .NET User Secrets:
+
+```powershell
+dotnet user-secrets set "ConnectionStrings:PostgreSql" `
+  "Host=localhost;Port=5432;Database=quiz_app;Username=postgres;Password=your-password" `
+  --project Quiz.Api
+```
+
+Production environments should provide the same value through the
+`ConnectionStrings__PostgreSql` environment variable or a dedicated secret
+store.
