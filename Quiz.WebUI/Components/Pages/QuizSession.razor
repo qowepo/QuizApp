@@ -25,6 +25,41 @@
                 </MudAlert>
             }
 
+            @if (!string.IsNullOrWhiteSpace(successMessage))
+            {
+                <MudAlert Severity="Severity.Success"
+                          Variant="Variant.Outlined"
+                          Class="mb-5">
+                    @successMessage
+                </MudAlert>
+            }
+
+            @if (isResetConfirmationVisible)
+            {
+                <section class="reset-confirmation mb-5" aria-label="Подтверждение сброса прогресса">
+                    <div>
+                        <MudText Typo="Typo.h6">Сбросить весь прогресс?</MudText>
+                        <MudText Typo="Typo.body2">
+                            Все ваши сохранённые ответы будут удалены, и каждый вопрос снова станет доступен.
+                        </MudText>
+                    </div>
+                    <div class="reset-confirmation-actions">
+                        <MudButton Variant="Variant.Text"
+                                   Disabled="@isBusy"
+                                   OnClick="CancelProgressReset">
+                            Отмена
+                        </MudButton>
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Error"
+                                   Disabled="@isBusy"
+                                   StartIcon="@Icons.Material.Filled.DeleteSweep"
+                                   OnClick="ResetProgressAsync">
+                            @(isBusy ? "Сбрасываем..." : "Да, сбросить")
+                        </MudButton>
+                    </div>
+                </section>
+            }
+
             @if (questions is null)
             {
                 <header class="session-heading">
@@ -47,7 +82,7 @@
                                     <span class="topic-symbol @option.StyleClass">
                                         <MudIcon Icon="@option.Icon" />
                                     </span>
-                                    <span class="topic-amount">5 вопросов</span>
+                                    <span class="topic-amount">Senior / Senior+</span>
                                 </div>
                                 <MudText Typo="Typo.h5">@option.Label</MudText>
                                 <MudText Typo="Typo.body2" Class="topic-description">
@@ -73,6 +108,19 @@
                         <MudText Typo="Typo.body2">Собираем вопросы...</MudText>
                     </div>
                 }
+
+                <div class="progress-management">
+                    <MudText Typo="Typo.body2">
+                        Хотите пройти уже изученные вопросы ещё раз?
+                    </MudText>
+                    <MudButton Variant="Variant.Outlined"
+                               Color="Color.Error"
+                               Disabled="@isBusy"
+                               StartIcon="@Icons.Material.Filled.RestartAlt"
+                               OnClick="ShowProgressResetConfirmation">
+                        Сбросить прогресс
+                    </MudButton>
+                </div>
             }
             else if (currentIndex >= questions.Count)
             {
@@ -91,8 +139,8 @@
                     </h1>
                     <MudText Typo="Typo.body1">
                         @(questions.Count == 0
-                            ? "Вы уже ответили на все вопросы этой темы. Выберите другое направление."
-                            : "Ваши ответы сохранены. Возвращайтесь к другой теме, чтобы продолжить практику.")
+                            ? "Вы уже ответили на все вопросы этой темы. Выберите другое направление или сбросьте прогресс."
+                            : "Ваши ответы сохранены. Можно продолжить эту же тему или выбрать новое направление.")
                     </MudText>
 
                     <div class="completion-actions">
@@ -101,12 +149,19 @@
                                    Size="Size.Large"
                                    StartIcon="@Icons.Material.Filled.Refresh"
                                    OnClick="Restart">
-                            Выбрать другую тему
+                            Продолжить тренировку
                         </MudButton>
                         <MudButton Href="/"
                                    Variant="Variant.Text"
                                    Size="Size.Large">
                             На главную
+                        </MudButton>
+                        <MudButton Variant="Variant.Outlined"
+                                   Color="Color.Error"
+                                   Size="Size.Large"
+                                   StartIcon="@Icons.Material.Filled.RestartAlt"
+                                   OnClick="ShowProgressResetConfirmation">
+                            Сбросить прогресс
                         </MudButton>
                     </div>
                 </MudPaper>
@@ -239,8 +294,10 @@
     private string? userId;
     private string? selectedTopicLabel;
     private string? errorMessage;
+    private string? successMessage;
     private bool isBusy;
     private bool isInitialized;
+    private bool isResetConfirmationVisible;
 
     private double ProgressPercent =>
         questions is null || questions.Count == 0
@@ -294,6 +351,8 @@
 
         isBusy = true;
         errorMessage = null;
+        successMessage = null;
+        isResetConfirmationVisible = false;
 
         try
         {
@@ -367,6 +426,56 @@
         idealAnswer = null;
         selectedTopicLabel = null;
         errorMessage = null;
+        successMessage = null;
+        isResetConfirmationVisible = false;
+    }
+
+    private void ShowProgressResetConfirmation()
+    {
+        errorMessage = null;
+        successMessage = null;
+        isResetConfirmationVisible = true;
+    }
+
+    private void CancelProgressReset()
+    {
+        isResetConfirmationVisible = false;
+    }
+
+    private async Task ResetProgressAsync()
+    {
+        if (userId is null)
+        {
+            return;
+        }
+
+        isBusy = true;
+        errorMessage = null;
+
+        try
+        {
+            var deletedAnswers = await Mediator.Send(
+                new ResetQuizProgressCommand(userId));
+
+            questions = null;
+            currentIndex = 0;
+            currentAnswer = string.Empty;
+            idealAnswer = null;
+            selectedTopicLabel = null;
+            isResetConfirmationVisible = false;
+            successMessage = deletedAnswers == 0
+                ? "Прогресс уже был пуст — все вопросы доступны."
+                : $"Прогресс сброшен. Удалено ответов: {deletedAnswers}. Все вопросы снова доступны.";
+        }
+        catch (Exception exception)
+        {
+            Logger.LogError(exception, "Failed to reset quiz progress.");
+            errorMessage = "Не удалось сбросить прогресс. Попробуйте ещё раз.";
+        }
+        finally
+        {
+            isBusy = false;
+        }
     }
 
     private sealed record TopicOption(

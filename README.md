@@ -16,8 +16,11 @@ The interactive session has four stages:
 2. Write and submit an answer.
 3. Compare it with the ideal answer.
 4. Continue until the batch is complete.
+5. Reset personal progress whenever previously answered questions should be
+   available again.
 
-The MVP includes 25 ready-to-use questions: five for each supported topic.
+The question bank includes 200 ready-to-use Senior and Senior+ questions:
+40 for each currently supported topic. The bank can be extended as topics evolve.
 
 ## Architecture
 
@@ -48,6 +51,8 @@ Quiz.WebUI ───────> Quiz.Application ───────> Quiz.D
 - The ideal answer stays hidden until the user's answer is saved.
 - A user can submit only one answer per question.
 - A unique database index protects this rule during concurrent operations.
+- Resetting progress deletes only the current user's answer history and does
+  not modify the shared question bank.
 
 ## Technology
 

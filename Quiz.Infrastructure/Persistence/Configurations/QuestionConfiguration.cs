@@ -48,6 +48,6 @@ internal sealed class QuestionConfiguration : IEntityTypeConfiguration<Question>
             .HasField("_answers")
             .UsePropertyAccessMode(PropertyAccessMode.Field);
 
-        builder.HasData(MvpQuestionSeed.All);
+        builder.HasData(MvpQuestionSeed.All.Concat(SeniorQuestionSeed.All));
     }
 }

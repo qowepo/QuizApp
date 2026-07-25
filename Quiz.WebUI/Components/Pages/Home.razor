@@ -21,7 +21,7 @@
                     </h1>
 
                     <MudText Typo="Typo.h6" Class="hero-description">
-                        Пять открытых вопросов, ваш собственный ответ и эталон
+                        Короткая сессия открытых вопросов, ваш собственный ответ и эталон
                         для честной самопроверки — без тестов с вариантами.
                     </MudText>
 
@@ -74,45 +74,58 @@
                         База знаний
                     </MudText>
                     <MudText Typo="Typo.h3">
-                        Пять ключевых направлений
+                        Практика, которая растёт вместе с вами
                     </MudText>
                 </div>
                 <MudText Typo="Typo.body1">
-                    25 вопросов уже внутри SQLite — приложение готово к работе сразу после запуска.
+                    Темы и банк вопросов можно расширять без изменения механики тренировки.
                 </MudText>
             </div>
 
             <MudGrid Spacing="3">
-                @foreach (var topic in Topics)
-                {
-                    <MudItem xs="12" sm="6" lg="4">
-                        <MudPaper Elevation="0" Class="topic-summary">
-                            <span class="topic-icon">@topic.Icon</span>
-                            <div>
-                                <MudText Typo="Typo.h6">@topic.Title</MudText>
-                                <MudText Typo="Typo.body2">@topic.Description</MudText>
-                            </div>
-                            <span class="question-count">5 вопросов</span>
-                        </MudPaper>
-                    </MudItem>
-                }
+                <MudItem xs="12" md="4">
+                    <MudPaper Elevation="0" Class="topic-summary">
+                        <span class="topic-icon">
+                            <MudIcon Icon="@Icons.Material.Filled.Psychology" />
+                        </span>
+                        <div>
+                            <MudText Typo="Typo.h6">Глубокие вопросы</MudText>
+                            <MudText Typo="Typo.body2">
+                                Не на знание терминов, а на понимание механизмов, ограничений и компромиссов.
+                            </MudText>
+                        </div>
+                        <span class="question-count">Уровень Senior / Senior+</span>
+                    </MudPaper>
+                </MudItem>
+                <MudItem xs="12" md="4">
+                    <MudPaper Elevation="0" Class="topic-summary">
+                        <span class="topic-icon">
+                            <MudIcon Icon="@Icons.Material.Filled.EditNote" />
+                        </span>
+                        <div>
+                            <MudText Typo="Typo.h6">Ответ своими словами</MudText>
+                            <MudText Typo="Typo.body2">
+                                Сначала формулируете решение сами, затем сравниваете его с эталоном.
+                            </MudText>
+                        </div>
+                        <span class="question-count">Без вариантов ответа</span>
+                    </MudPaper>
+                </MudItem>
+                <MudItem xs="12" md="4">
+                    <MudPaper Elevation="0" Class="topic-summary">
+                        <span class="topic-icon">
+                            <MudIcon Icon="@Icons.Material.Filled.Autorenew" />
+                        </span>
+                        <div>
+                            <MudText Typo="Typo.h6">Повторная тренировка</MudText>
+                            <MudText Typo="Typo.body2">
+                                Пройденные вопросы не повторяются, пока вы сами не сбросите прогресс.
+                            </MudText>
+                        </div>
+                        <span class="question-count">Ваш собственный темп</span>
+                    </MudPaper>
+                </MudItem>
             </MudGrid>
         </MudContainer>
     </section>
 </main>
-
-@code {
-    private static readonly TopicSummary[] Topics =
-    [
-        new("C#", "CLR, async/await и современный язык", "{ }"),
-        new("Entity Framework", "Запросы, tracking и производительность", "EF"),
-        new("RabbitMQ", "Надёжная доставка и обработка сообщений", "MQ"),
-        new("PostgreSQL", "Индексы, MVCC и планы запросов", "PG"),
-        new("Architecture", "DDD, CQRS и системные компромиссы", "AD")
-    ];
-
-    private sealed record TopicSummary(
-        string Title,
-        string Description,
-        string Icon);
-}

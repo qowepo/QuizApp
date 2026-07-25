@@ -66,4 +66,20 @@ public sealed class QuestionRepository : IQuestionRepository
         await _dbContext.UserAnswers.AddAsync(answer, cancellationToken);
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
+
+    public Task<int> DeleteAnswersByUserAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        if (userId == Guid.Empty)
+        {
+            throw new ArgumentException(
+                "User identifier cannot be empty.",
+                nameof(userId));
+        }
+
+        return _dbContext.UserAnswers
+            .Where(answer => answer.UserId == userId)
+            .ExecuteDeleteAsync(cancellationToken);
+    }
 }

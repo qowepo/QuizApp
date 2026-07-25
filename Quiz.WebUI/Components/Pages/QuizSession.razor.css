@@ -122,6 +122,33 @@
     color: #747687;
 }
 
+.progress-management,
+.reset-confirmation {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+}
+
+.progress-management {
+    margin-top: 2rem;
+    padding: 1.25rem 0;
+    color: #747687;
+}
+
+.reset-confirmation {
+    padding: 1.25rem 1.5rem;
+    border: 1px solid #F0C9C9;
+    border-radius: 18px;
+    background: #FFF8F8;
+}
+
+.reset-confirmation-actions {
+    display: flex;
+    flex-shrink: 0;
+    gap: 0.5rem;
+}
+
 .session-progress {
     margin-bottom: 1.25rem;
     padding: 0 0.25rem;
@@ -281,9 +308,15 @@
     .question-actions,
     .review-actions,
     .review-heading,
-    .completion-actions {
+    .completion-actions,
+    .progress-management,
+    .reset-confirmation {
         align-items: stretch;
         flex-direction: column;
+    }
+
+    .reset-confirmation-actions {
+        justify-content: flex-end;
     }
 
     .review-heading {

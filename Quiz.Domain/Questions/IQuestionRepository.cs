@@ -27,4 +27,11 @@ public interface IQuestionRepository
     Task SaveAnswerAsync(
         UserAnswer answer,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Удаляет историю ответов пользователя, чтобы вопросы снова стали доступны.
+    /// </summary>
+    Task<int> DeleteAnswersByUserAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default);
 }
