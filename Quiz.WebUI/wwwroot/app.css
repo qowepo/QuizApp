@@ -33,6 +33,11 @@ textarea:focus-visible,
     outline-offset: 3px;
 }
 
+/* Blazor фокусирует заголовок после навигации для скринридеров. */
+h1[tabindex="-1"]:focus {
+    outline: none;
+}
+
 .blazor-error-boundary {
     padding: 1rem;
     color: white;
