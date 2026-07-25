@@ -7,8 +7,6 @@ namespace Quiz.Infrastructure.Persistence.Configurations;
 /// </summary>
 internal static class AnswerOptionSeed
 {
-    private static readonly int[] DistractorOffsets = [7, 17, 29];
-
     public static readonly IReadOnlyList<AnswerOptionSeedData> All =
         Build().ToArray();
 
@@ -21,12 +19,6 @@ internal static class AnswerOptionSeed
                 .OrderBy(question => question.Sequence)
                 .ToArray();
 
-            if (questions.Length != 40)
-            {
-                throw new InvalidOperationException(
-                    $"Topic {topicGroup.Key} must contain exactly 40 questions.");
-            }
-
             for (var questionIndex = 0;
                  questionIndex < questions.Length;
                  questionIndex++)
@@ -34,25 +26,23 @@ internal static class AnswerOptionSeed
                 var question = questions[questionIndex];
                 var correctPosition = questionIndex % 4;
                 var distractorIndex = 0;
+                var distractors = QuestionDistractorCatalog.Get(question);
 
                 for (var position = 0; position < 4; position++)
                 {
                     var isCorrect = position == correctPosition;
-                    var source = isCorrect
-                        ? question
-                        : questions[
-                            (questionIndex +
-                             DistractorOffsets[distractorIndex++]) %
-                            questions.Length];
+                    var optionText = isCorrect
+                        ? question.IdealAnswer
+                        : distractors[distractorIndex++];
 
                     yield return new AnswerOptionSeedData(
                         CreateOptionId(question, position + 1),
                         question.Id,
-                        source.IdealAnswer,
+                        optionText,
                         isCorrect,
                         isCorrect
                             ? "Этот вариант напрямую отвечает на поставленный вопрос и учитывает ключевые ограничения и компромиссы."
-                            : $"Этот вариант технически корректен, но раскрывает другой вопрос: «{source.Text}». Поэтому он не отвечает на текущую формулировку.");
+                            : "Этот вариант относится к поставленному вопросу, но содержит неверную гарантию, условие или причинно-следственную связь. Сравните его с подробным разбором ниже.");
                 }
             }
         }
