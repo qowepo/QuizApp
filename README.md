@@ -17,6 +17,8 @@ The interactive session has four stages:
 3. Compare it with the ideal answer.
 4. Continue until the batch is complete.
 
+The MVP includes 25 ready-to-use questions: five for each supported topic.
+
 ## Architecture
 
 The solution follows Clean Architecture and Tactical Domain-Driven Design:
@@ -78,3 +80,16 @@ dotnet run --project Quiz.WebUI
 ```
 
 Open the URL printed by ASP.NET Core and navigate to `/quiz`.
+
+## Troubleshooting
+
+If the build reports `MSB3021` or `MSB3027` and says that `Quiz.WebUI` is using
+a DLL file, stop the currently running application before rebuilding:
+
+```powershell
+Get-Process Quiz.WebUI -ErrorAction SilentlyContinue | Stop-Process
+dotnet build QuizApp.sln
+```
+
+In Visual Studio, the equivalent action is **Stop Debugging** before selecting
+**Rebuild Solution**.

@@ -47,5 +47,7 @@ internal sealed class QuestionConfiguration : IEntityTypeConfiguration<Question>
         builder.Navigation(question => question.Answers)
             .HasField("_answers")
             .UsePropertyAccessMode(PropertyAccessMode.Field);
+
+        builder.HasData(MvpQuestionSeed.All);
     }
 }

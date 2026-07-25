@@ -3,152 +3,249 @@
 @inject ProtectedLocalStorage LocalStorage
 @inject ILogger<QuizSession> Logger
 
-<PageTitle>Quiz Session</PageTitle>
+<PageTitle>Тренировка — QuizApp</PageTitle>
 
-<MudContainer MaxWidth="MaxWidth.Medium" Class="quiz-session py-8">
-    @if (!isInitialized)
-    {
-        <div class="loading-indicator">
-            <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
-        </div>
-    }
-    else
-    {
-        @if (!string.IsNullOrWhiteSpace(errorMessage))
+<main class="session-page">
+    <MudContainer MaxWidth="MaxWidth.Medium" Class="session-container">
+        @if (!isInitialized)
         {
-            <MudAlert Severity="Severity.Error" Class="mb-4">
-                @errorMessage
-            </MudAlert>
-        }
-
-        @if (questions is null)
-        {
-            <MudText Typo="Typo.h3" Align="Align.Center" GutterBottom="true">
-                Выберите тему
-            </MudText>
-            <MudText Typo="Typo.body1" Align="Align.Center" Class="mb-6">
-                Получите до пяти вопросов, на которые вы ещё не отвечали.
-            </MudText>
-
-            <MudGrid Spacing="3">
-                @foreach (var option in TopicOptions)
-                {
-                    <MudItem xs="12" sm="6">
-                        <MudButton Variant="Variant.Filled"
-                                   Color="Color.Primary"
-                                   Size="Size.Large"
-                                   FullWidth="true"
-                                   Disabled="@isBusy"
-                                   OnClick="@(() => StartQuizAsync(option.Topic))">
-                            @option.Label
-                        </MudButton>
-                    </MudItem>
-                }
-            </MudGrid>
-
-            @if (isBusy)
-            {
-                <div class="loading-indicator">
-                    <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
-                </div>
-            }
-        }
-        else if (currentIndex >= questions.Count)
-        {
-            <MudCard Class="pa-8 text-center">
-                <MudText Typo="Typo.h4" Color="Color.Success" GutterBottom="true">
-                    @(questions.Count == 0 ? "Новых вопросов не осталось" : "Сессия успешно завершена!")
-                </MudText>
-                <MudText Typo="Typo.body1" Class="mb-6">
-                    Вы можете выбрать другую тему или начать новую сессию.
-                </MudText>
-                <MudButton Variant="Variant.Filled"
-                           Color="Color.Primary"
-                           OnClick="Restart">
-                    Начать заново
-                </MudButton>
-            </MudCard>
-        }
-        else if (idealAnswer is null)
-        {
-            <MudCard Class="pa-6">
-                <MudText Typo="Typo.overline" Color="Color.Primary">
-                    Вопрос @(currentIndex + 1) из @questions.Count
-                </MudText>
-                <MudText Typo="Typo.h5" Class="my-4">
-                    @questions[currentIndex].Text
-                </MudText>
-
-                <MudTextField @bind-Value="currentAnswer"
-                              Label="Ваш ответ"
-                              Placeholder="Опишите решение своими словами..."
-                              Variant="Variant.Outlined"
-                              Lines="8"
-                              FullWidth="true" />
-
-                <MudButton Variant="Variant.Filled"
-                           Color="Color.Primary"
-                           Class="mt-4"
-                           Disabled="@(isBusy || string.IsNullOrWhiteSpace(currentAnswer))"
-                           OnClick="SubmitAnswerAsync">
-                    Отправить
-                </MudButton>
-            </MudCard>
+            <div class="loading-state">
+                <MudProgressCircular Indeterminate="true" Color="Color.Primary" Size="Size.Large" />
+                <MudText Typo="Typo.body1">Готовим вашу тренировку...</MudText>
+            </div>
         }
         else
         {
-            <MudText Typo="Typo.overline" Color="Color.Primary">
-                Вопрос @(currentIndex + 1) из @questions.Count — разбор
-            </MudText>
+            @if (!string.IsNullOrWhiteSpace(errorMessage))
+            {
+                <MudAlert Severity="Severity.Error"
+                          Variant="Variant.Outlined"
+                          Class="mb-5">
+                    @errorMessage
+                </MudAlert>
+            }
 
-            <MudCard Class="pa-6 mb-4">
-                <MudText Typo="Typo.subtitle1" GutterBottom="true">
-                    Ваш ответ
-                </MudText>
-                <MudText Typo="Typo.body1" Class="answer-text">
-                    @currentAnswer
-                </MudText>
-            </MudCard>
+            @if (questions is null)
+            {
+                <header class="session-heading">
+                    <MudText Typo="Typo.overline" Color="Color.Primary">
+                        Новая сессия
+                    </MudText>
+                    <h1>Что тренируем сегодня?</h1>
+                    <MudText Typo="Typo.body1">
+                        Выберите направление. Мы случайно соберём пять вопросов,
+                        которых вы ещё не проходили.
+                    </MudText>
+                </header>
 
-            <MudCard Class="pa-6 ideal-answer-card">
-                <MudText Typo="Typo.subtitle1" Color="Color.Success" GutterBottom="true">
-                    Эталонный ответ
-                </MudText>
-                <MudText Typo="Typo.body1" Class="answer-text">
-                    @idealAnswer
-                </MudText>
-            </MudCard>
+                <MudGrid Spacing="3">
+                    @foreach (var option in TopicOptions)
+                    {
+                        <MudItem xs="12" sm="6">
+                            <MudPaper Elevation="0" Class="topic-card">
+                                <div class="topic-card-header">
+                                    <span class="topic-symbol @option.StyleClass">
+                                        <MudIcon Icon="@option.Icon" />
+                                    </span>
+                                    <span class="topic-amount">5 вопросов</span>
+                                </div>
+                                <MudText Typo="Typo.h5">@option.Label</MudText>
+                                <MudText Typo="Typo.body2" Class="topic-description">
+                                    @option.Description
+                                </MudText>
+                                <MudButton Variant="Variant.Filled"
+                                           Color="Color.Primary"
+                                           FullWidth="true"
+                                           Disabled="@isBusy"
+                                           EndIcon="@Icons.Material.Filled.ArrowForward"
+                                           OnClick="@(() => StartQuizAsync(option))">
+                                    Выбрать тему
+                                </MudButton>
+                            </MudPaper>
+                        </MudItem>
+                    }
+                </MudGrid>
 
-            <MudButton Variant="Variant.Filled"
-                       Color="Color.Success"
-                       Class="mt-4"
-                       OnClick="NextQuestion">
-                Следующий вопрос
-            </MudButton>
+                @if (isBusy)
+                {
+                    <div class="inline-loading">
+                        <MudProgressCircular Indeterminate="true" Color="Color.Primary" Size="Size.Small" />
+                        <MudText Typo="Typo.body2">Собираем вопросы...</MudText>
+                    </div>
+                }
+            }
+            else if (currentIndex >= questions.Count)
+            {
+                <MudPaper Elevation="0" Class="completion-card">
+                    <span class="completion-icon">
+                        <MudIcon Icon="@Icons.Material.Filled.Check" Size="Size.Large" />
+                    </span>
+
+                    <MudText Typo="Typo.overline" Color="Color.Success">
+                        Сессия завершена
+                    </MudText>
+                    <h1>
+                        @(questions.Count == 0
+                            ? "Здесь всё пройдено"
+                            : $"Отличная работа: {questions.Count} из {questions.Count}")
+                    </h1>
+                    <MudText Typo="Typo.body1">
+                        @(questions.Count == 0
+                            ? "Вы уже ответили на все вопросы этой темы. Выберите другое направление."
+                            : "Ваши ответы сохранены. Возвращайтесь к другой теме, чтобы продолжить практику.")
+                    </MudText>
+
+                    <div class="completion-actions">
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   Size="Size.Large"
+                                   StartIcon="@Icons.Material.Filled.Refresh"
+                                   OnClick="Restart">
+                            Выбрать другую тему
+                        </MudButton>
+                        <MudButton Href="/"
+                                   Variant="Variant.Text"
+                                   Size="Size.Large">
+                            На главную
+                        </MudButton>
+                    </div>
+                </MudPaper>
+            }
+            else
+            {
+                <div class="session-progress">
+                    <div class="progress-copy">
+                        <div>
+                            <MudText Typo="Typo.overline" Color="Color.Primary">
+                                @selectedTopicLabel
+                            </MudText>
+                            <MudText Typo="Typo.body2">
+                                Вопрос @(currentIndex + 1) из @questions.Count
+                            </MudText>
+                        </div>
+                        <span>@Math.Round(ProgressPercent)%</span>
+                    </div>
+                    <MudProgressLinear Value="@ProgressPercent"
+                                       Color="Color.Primary"
+                                       Rounded="true"
+                                       Size="Size.Medium" />
+                </div>
+
+                @if (idealAnswer is null)
+                {
+                    <MudPaper Elevation="0" Class="question-card">
+                        <div class="question-number">0@(currentIndex + 1)</div>
+                        <MudText Typo="Typo.h4" Class="question-text">
+                            @questions[currentIndex].Text
+                        </MudText>
+                        <MudText Typo="Typo.body2" Class="question-hint">
+                            Отвечайте так, как объясняли бы решение на техническом интервью.
+                        </MudText>
+
+                        <MudTextField @bind-Value="currentAnswer"
+                                      Label="Ваш ответ"
+                                      Placeholder="Сформулируйте основные идеи, компромиссы и примеры..."
+                                      Variant="Variant.Outlined"
+                                      Lines="9"
+                                      Immediate="true"
+                                      FullWidth="true"
+                                      Disabled="@isBusy"
+                                      Class="answer-input" />
+
+                        <div class="question-actions">
+                            <MudText Typo="Typo.caption">
+                                Эталон откроется после сохранения ответа
+                            </MudText>
+                            <MudButton Variant="Variant.Filled"
+                                       Color="Color.Primary"
+                                       Size="Size.Large"
+                                       Disabled="@(isBusy || string.IsNullOrWhiteSpace(currentAnswer))"
+                                       EndIcon="@Icons.Material.Filled.ArrowForward"
+                                       OnClick="SubmitAnswerAsync">
+                                @(isBusy ? "Сохраняем..." : "Показать эталон")
+                            </MudButton>
+                        </div>
+                    </MudPaper>
+                }
+                else
+                {
+                    <div class="review-heading">
+                        <span class="review-badge">
+                            <MudIcon Icon="@Icons.Material.Filled.Visibility" Size="Size.Small" />
+                            Режим самопроверки
+                        </span>
+                        <MudText Typo="Typo.h4">Сравните ход мыслей</MudText>
+                    </div>
+
+                    <MudGrid Spacing="3">
+                        <MudItem xs="12" md="6">
+                            <MudPaper Elevation="0" Class="review-card user-answer-card">
+                                <MudText Typo="Typo.overline">Ваш ответ</MudText>
+                                <MudDivider Class="my-3" />
+                                <MudText Typo="Typo.body1" Class="answer-text">
+                                    @currentAnswer
+                                </MudText>
+                            </MudPaper>
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudPaper Elevation="0" Class="review-card ideal-answer-card">
+                                <MudText Typo="Typo.overline" Color="Color.Success">
+                                    Эталонный ответ
+                                </MudText>
+                                <MudDivider Class="my-3" />
+                                <MudText Typo="Typo.body1" Class="answer-text">
+                                    @idealAnswer
+                                </MudText>
+                            </MudPaper>
+                        </MudItem>
+                    </MudGrid>
+
+                    <div class="review-actions">
+                        <MudText Typo="Typo.body2">
+                            Отметьте для себя, какие аргументы стоит добавить в следующий раз.
+                        </MudText>
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Success"
+                                   Size="Size.Large"
+                                   EndIcon="@Icons.Material.Filled.ArrowForward"
+                                   OnClick="NextQuestion">
+                            @(currentIndex + 1 == questions.Count
+                                ? "Завершить сессию"
+                                : "Следующий вопрос")
+                        </MudButton>
+                    </div>
+                }
+            }
         }
-    }
-</MudContainer>
+    </MudContainer>
+</main>
 
 @code {
     private const string UserIdStorageKey = "quiz-app-user-id";
 
     private static readonly TopicOption[] TopicOptions =
     [
-        new(Topic.CSharp, "C#"),
-        new(Topic.EntityFramework, "Entity Framework Core"),
-        new(Topic.RabbitMQ, "RabbitMQ"),
-        new(Topic.PostgreSQL, "PostgreSQL"),
-        new(Topic.Architecture, "Architecture")
+        new(Topic.CSharp, "C#", "Язык, CLR, память и асинхронность", Icons.Material.Filled.Code, "violet"),
+        new(Topic.EntityFramework, "Entity Framework", "Запросы, tracking и работа с данными", Icons.Material.Filled.Storage, "blue"),
+        new(Topic.RabbitMQ, "RabbitMQ", "Очереди, доставка и отказоустойчивость", Icons.Material.Filled.Hub, "orange"),
+        new(Topic.PostgreSQL, "PostgreSQL", "Индексы, транзакции и оптимизация", Icons.Material.Filled.Dns, "green"),
+        new(Topic.Architecture, "Architecture", "DDD, CQRS и системный дизайн", Icons.Material.Filled.AccountTree, "rose")
     ];
 
     private List<QuizQuestionDto>? questions;
-    private int currentIndex = 0;
+    private int currentIndex;
     private string currentAnswer = string.Empty;
-    private string? idealAnswer = null;
+    private string? idealAnswer;
     private string? userId;
+    private string? selectedTopicLabel;
     private string? errorMessage;
     private bool isBusy;
     private bool isInitialized;
+
+    private double ProgressPercent =>
+        questions is null || questions.Count == 0
+            ? 0
+            : (currentIndex + 1d) / questions.Count * 100d;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -157,25 +254,38 @@
             return;
         }
 
-        var storedUserId = await LocalStorage
-            .GetAsync<string>(UserIdStorageKey);
+        try
+        {
+            var storedUserId = await LocalStorage
+                .GetAsync<string>(UserIdStorageKey);
 
-        if (storedUserId.Success &&
-            Guid.TryParse(storedUserId.Value, out var parsedUserId))
-        {
-            userId = parsedUserId.ToString();
+            if (storedUserId.Success &&
+                Guid.TryParse(storedUserId.Value, out var parsedUserId))
+            {
+                userId = parsedUserId.ToString();
+            }
+            else
+            {
+                userId = Guid.NewGuid().ToString();
+                await LocalStorage.SetAsync(UserIdStorageKey, userId);
+            }
         }
-        else
+        catch (Exception exception)
         {
+            Logger.LogWarning(
+                exception,
+                "Could not access protected local storage. Using a circuit-scoped user identifier.");
+
             userId = Guid.NewGuid().ToString();
-            await LocalStorage.SetAsync(UserIdStorageKey, userId);
         }
-
-        isInitialized = true;
-        StateHasChanged();
+        finally
+        {
+            isInitialized = true;
+            StateHasChanged();
+        }
     }
 
-    private async Task StartQuizAsync(Topic topic)
+    private async Task StartQuizAsync(TopicOption option)
     {
         if (userId is null)
         {
@@ -188,9 +298,10 @@
         try
         {
             questions = (await Mediator.Send(
-                new GetQuizBatchQuery(userId, topic)))
+                new GetQuizBatchQuery(userId, option.Topic)))
                 .ToList();
 
+            selectedTopicLabel = option.Label;
             currentIndex = 0;
             currentAnswer = string.Empty;
             idealAnswer = null;
@@ -254,8 +365,14 @@
         currentIndex = 0;
         currentAnswer = string.Empty;
         idealAnswer = null;
+        selectedTopicLabel = null;
         errorMessage = null;
     }
 
-    private sealed record TopicOption(Topic Topic, string Label);
+    private sealed record TopicOption(
+        Topic Topic,
+        string Label,
+        string Description,
+        string Icon,
+        string StyleClass);
 }

@@ -1,28 +1,62 @@
-﻿@inherits LayoutComponentBase
+@inherits LayoutComponentBase
 
-<MudThemeProvider />
+<MudThemeProvider Theme="@theme" />
 <MudPopoverProvider />
 <MudDialogProvider />
 <MudSnackbarProvider />
 
-<div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
+<MudLayout>
+    <MudAppBar Elevation="0" Fixed="true" Class="app-header">
+        <div class="header-inner">
+            <MudLink Href="/" Underline="Underline.None" Class="brand">
+                <span class="brand-mark">Q</span>
+                <span class="brand-copy">
+                    <strong>QuizApp</strong>
+                    <small>Senior practice lab</small>
+                </span>
+            </MudLink>
 
-    <main>
-        <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
+            <MudSpacer />
+
+            <nav class="main-navigation" aria-label="Главная навигация">
+                <MudButton Href="/" Variant="Variant.Text" Color="Color.Inherit">
+                    Главная
+                </MudButton>
+                <MudButton Href="/quiz"
+                           Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Bolt">
+                    Тренировка
+                </MudButton>
+            </nav>
         </div>
+    </MudAppBar>
 
-        <article class="content px-4">
-            @Body
-        </article>
-    </main>
-</div>
+    <MudMainContent Class="app-content">
+        @Body
+    </MudMainContent>
+</MudLayout>
 
 <div id="blazor-error-ui">
-    An unhandled error has occurred.
-    <a href="" class="reload">Reload</a>
-    <a class="dismiss">🗙</a>
+    Произошла ошибка.
+    <a href="" class="reload">Перезагрузить</a>
+    <a class="dismiss">×</a>
 </div>
+
+@code {
+    private readonly MudTheme theme = new()
+    {
+        PaletteLight = new PaletteLight
+        {
+            Primary = "#6557E8",
+            Secondary = "#00A884",
+            Success = "#159A68",
+            Background = "#F5F6FA",
+            Surface = "#FFFFFF",
+            AppbarBackground = "#FFFFFF",
+            AppbarText = "#17182A",
+            TextPrimary = "#17182A",
+            TextSecondary = "#686A7A"
+        }
+    };
+}

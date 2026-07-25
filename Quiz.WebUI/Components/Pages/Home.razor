@@ -1,18 +1,118 @@
 @page "/"
 
-<PageTitle>QuizApp</PageTitle>
+<PageTitle>QuizApp — тренировка Senior-разработчиков</PageTitle>
 
-<MudContainer MaxWidth="MaxWidth.Medium" Class="py-12 text-center">
-    <MudText Typo="Typo.h2" GutterBottom="true">
-        Senior Developer Self-Assessment
-    </MudText>
-    <MudText Typo="Typo.h6" Class="mb-8">
-        Практикуйте ответы на сложные вопросы и сравнивайте их с эталоном.
-    </MudText>
-    <MudButton Href="/quiz"
-               Variant="Variant.Filled"
-               Color="Color.Primary"
-               Size="Size.Large">
-        Начать квиз
-    </MudButton>
-</MudContainer>
+<main>
+    <section class="hero">
+        <MudContainer MaxWidth="MaxWidth.Large">
+            <div class="hero-grid">
+                <div class="hero-copy">
+                    <MudChip T="string"
+                             Variant="Variant.Outlined"
+                             Color="Color.Primary"
+                             Icon="@Icons.Material.Filled.AutoAwesome"
+                             Class="mb-5">
+                        Практика без подсказок
+                    </MudChip>
+
+                    <h1 class="hero-title">
+                        Отвечайте как Senior.
+                        <span>Думайте как архитектор.</span>
+                    </h1>
+
+                    <MudText Typo="Typo.h6" Class="hero-description">
+                        Пять открытых вопросов, ваш собственный ответ и эталон
+                        для честной самопроверки — без тестов с вариантами.
+                    </MudText>
+
+                    <div class="hero-actions">
+                        <MudButton Href="/quiz"
+                                   Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   Size="Size.Large"
+                                   EndIcon="@Icons.Material.Filled.ArrowForward">
+                            Начать тренировку
+                        </MudButton>
+                        <MudText Typo="Typo.caption" Class="session-note">
+                            <MudIcon Icon="@Icons.Material.Filled.Schedule" Size="Size.Small" />
+                            Одна сессия — около 15 минут
+                        </MudText>
+                    </div>
+                </div>
+
+                <MudPaper Elevation="0" Class="preview-card">
+                    <div class="preview-topline">
+                        <span class="preview-label">Architecture</span>
+                        <span>01 / 05</span>
+                    </div>
+                    <MudProgressLinear Value="20"
+                                       Color="Color.Primary"
+                                       Rounded="true"
+                                       Class="my-4" />
+                    <MudText Typo="Typo.h5" Class="preview-question">
+                        Как определить правильные границы агрегата в DDD?
+                    </MudText>
+                    <div class="answer-placeholder">
+                        <span></span>
+                        <span></span>
+                        <span class="short"></span>
+                    </div>
+                    <div class="preview-footer">
+                        <span>Сформулируйте ответ своими словами</span>
+                        <span class="arrow-circle">→</span>
+                    </div>
+                </MudPaper>
+            </div>
+        </MudContainer>
+    </section>
+
+    <section class="topics-section">
+        <MudContainer MaxWidth="MaxWidth.Large">
+            <div class="section-heading">
+                <div>
+                    <MudText Typo="Typo.overline" Color="Color.Primary">
+                        База знаний
+                    </MudText>
+                    <MudText Typo="Typo.h3">
+                        Пять ключевых направлений
+                    </MudText>
+                </div>
+                <MudText Typo="Typo.body1">
+                    25 вопросов уже внутри SQLite — приложение готово к работе сразу после запуска.
+                </MudText>
+            </div>
+
+            <MudGrid Spacing="3">
+                @foreach (var topic in Topics)
+                {
+                    <MudItem xs="12" sm="6" lg="4">
+                        <MudPaper Elevation="0" Class="topic-summary">
+                            <span class="topic-icon">@topic.Icon</span>
+                            <div>
+                                <MudText Typo="Typo.h6">@topic.Title</MudText>
+                                <MudText Typo="Typo.body2">@topic.Description</MudText>
+                            </div>
+                            <span class="question-count">5 вопросов</span>
+                        </MudPaper>
+                    </MudItem>
+                }
+            </MudGrid>
+        </MudContainer>
+    </section>
+</main>
+
+@code {
+    private static readonly TopicSummary[] Topics =
+    [
+        new("C#", "CLR, async/await и современный язык", "{ }"),
+        new("Entity Framework", "Запросы, tracking и производительность", "EF"),
+        new("RabbitMQ", "Надёжная доставка и обработка сообщений", "MQ"),
+        new("PostgreSQL", "Индексы, MVCC и планы запросов", "PG"),
+        new("Architecture", "DDD, CQRS и системные компромиссы", "AD")
+    ];
+
+    private sealed record TopicSummary(
+        string Title,
+        string Description,
+        string Icon);
+}

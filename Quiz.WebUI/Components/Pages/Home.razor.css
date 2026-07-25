@@ -1,0 +1,234 @@
+.hero {
+    position: relative;
+    overflow: hidden;
+    padding: 6.5rem 0 7rem;
+    background:
+        radial-gradient(circle at 8% 10%, rgba(101, 87, 232, 0.14), transparent 32%),
+        radial-gradient(circle at 92% 85%, rgba(0, 168, 132, 0.12), transparent 28%),
+        #FAFAFD;
+}
+
+.hero::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image: radial-gradient(rgba(49, 46, 93, 0.12) 0.7px, transparent 0.7px);
+    background-size: 24px 24px;
+    mask-image: linear-gradient(to right, black, transparent 75%);
+}
+
+.hero-grid {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: minmax(0, 1.08fr) minmax(360px, 0.92fr);
+    gap: 5rem;
+    align-items: center;
+}
+
+.hero-title {
+    max-width: 760px;
+    margin: 0;
+    color: #17182A;
+    font-size: clamp(3rem, 6vw, 5.8rem);
+    font-weight: 800;
+    letter-spacing: -0.055em;
+    line-height: 0.98;
+}
+
+.hero-title span {
+    display: block;
+    color: #6557E8;
+}
+
+::deep .hero-description {
+    max-width: 650px;
+    margin-top: 2rem;
+    color: #656779;
+    line-height: 1.65;
+    font-weight: 400;
+}
+
+.hero-actions {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    margin-top: 2rem;
+}
+
+::deep .session-note {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: #747687;
+}
+
+::deep .preview-card {
+    position: relative;
+    padding: 2rem;
+    border: 1px solid rgba(31, 32, 57, 0.08);
+    border-radius: 28px;
+    box-shadow: 0 28px 80px rgba(42, 39, 89, 0.14);
+    transform: rotate(1.5deg);
+}
+
+.preview-card::before {
+    content: "";
+    position: absolute;
+    inset: 12px -12px -12px 12px;
+    z-index: -1;
+    border-radius: 28px;
+    background: #DED9FF;
+}
+
+.preview-topline,
+.preview-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: #858798;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.preview-label {
+    color: #6557E8;
+}
+
+::deep .preview-question {
+    min-height: 96px;
+    line-height: 1.4;
+    font-weight: 650;
+}
+
+.answer-placeholder {
+    display: grid;
+    gap: 0.8rem;
+    margin: 1.75rem 0;
+    padding: 1.4rem;
+    border: 1px solid #E5E6EC;
+    border-radius: 16px;
+    background: #FAFAFC;
+}
+
+.answer-placeholder span {
+    height: 8px;
+    border-radius: 999px;
+    background: #E3E4EB;
+}
+
+.answer-placeholder .short {
+    width: 62%;
+}
+
+.arrow-circle {
+    width: 36px;
+    height: 36px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    color: white;
+    background: #6557E8;
+    font-size: 1.1rem;
+}
+
+.topics-section {
+    padding: 5.5rem 0 7rem;
+    background: white;
+}
+
+.section-heading {
+    display: grid;
+    grid-template-columns: 1fr 0.7fr;
+    gap: 3rem;
+    align-items: end;
+    margin-bottom: 2.5rem;
+}
+
+.section-heading > ::deep p {
+    color: #707284;
+    line-height: 1.65;
+}
+
+::deep .topic-summary {
+    min-height: 190px;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1.5rem;
+    border: 1px solid #ECECF2;
+    border-radius: 20px;
+    transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+::deep .topic-summary:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 18px 38px rgba(33, 34, 64, 0.09);
+}
+
+.topic-icon {
+    width: 46px;
+    height: 46px;
+    display: grid;
+    place-items: center;
+    border-radius: 14px;
+    color: #5547D4;
+    background: #EFEDFF;
+    font-size: 0.88rem;
+    font-weight: 800;
+}
+
+::deep .topic-summary p {
+    color: #77798A;
+    line-height: 1.5;
+}
+
+.question-count {
+    margin-top: auto;
+    color: #6557E8;
+    font-size: 0.78rem;
+    font-weight: 700;
+}
+
+@media (max-width: 900px) {
+    .hero {
+        padding: 4.5rem 0;
+    }
+
+    .hero-grid {
+        grid-template-columns: 1fr;
+        gap: 3.5rem;
+    }
+
+    ::deep .preview-card {
+        max-width: 620px;
+        transform: none;
+    }
+}
+
+@media (max-width: 600px) {
+    .hero {
+        padding: 3.5rem 0 4.5rem;
+    }
+
+    .hero-title {
+        font-size: 3rem;
+    }
+
+    .hero-actions {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    ::deep .preview-card {
+        padding: 1.35rem;
+    }
+
+    .section-heading {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+}
