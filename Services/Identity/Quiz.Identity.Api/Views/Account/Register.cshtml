@@ -1,0 +1,35 @@
+@model RegisterViewModel
+@{
+    ViewData["Title"] = "Create account";
+}
+
+<section class="auth-card">
+    <div class="eyebrow">Start practicing</div>
+    <h1>Create account</h1>
+    <p class="lead">Your progress and completed questions will be linked to this identity.</p>
+
+    <form asp-action="Register" method="post">
+        <input asp-for="ReturnUrl" type="hidden" />
+        <div asp-validation-summary="ModelOnly" class="validation"></div>
+
+        <label asp-for="DisplayName">Display name</label>
+        <input asp-for="DisplayName" autocomplete="name" placeholder="Alex Developer" />
+        <span asp-validation-for="DisplayName" class="validation"></span>
+
+        <label asp-for="Email">Email</label>
+        <input asp-for="Email" autocomplete="email" placeholder="you@example.com" />
+        <span asp-validation-for="Email" class="validation"></span>
+
+        <label asp-for="Password">Password</label>
+        <input asp-for="Password" autocomplete="new-password" />
+        <span asp-validation-for="Password" class="validation"></span>
+        <small class="hint">At least 10 characters with upper/lower case, a number and a symbol.</small>
+
+        <button type="submit">Create account</button>
+    </form>
+
+    <p class="alternate">
+        Already registered?
+        <a asp-action="Login" asp-route-returnUrl="@Model.ReturnUrl">Sign in</a>
+    </p>
+</section>
