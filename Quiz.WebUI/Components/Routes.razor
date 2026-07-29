@@ -1,6 +1,40 @@
-﻿<Router AppAssembly="typeof(Program).Assembly">
-    <Found Context="routeData">
-        <RouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)" />
-        <FocusOnNavigate RouteData="routeData" Selector="h1" />
-    </Found>
-</Router>
+<CascadingAuthenticationState>
+    <Router AppAssembly="typeof(Program).Assembly">
+        <Found Context="routeData">
+            <AuthorizeRouteView RouteData="routeData"
+                                DefaultLayout="typeof(Layout.MainLayout)">
+                <NotAuthorized>
+                    <LayoutView Layout="typeof(Layout.MainLayout)">
+                        <MudContainer MaxWidth="MaxWidth.Small" Class="py-16">
+                            <MudPaper Elevation="0" Class="pa-8 rounded-xl">
+                                <MudText Typo="Typo.overline" Color="Color.Primary">
+                                    Требуется авторизация
+                                </MudText>
+                                <MudText Typo="Typo.h4" Class="mt-2 mb-3">
+                                    Войдите, чтобы начать тренировку
+                                </MudText>
+                                <MudText Typo="Typo.body1" Class="mb-6">
+                                    После входа прогресс будет связан с вашей учетной записью,
+                                    а не с конкретным браузером.
+                                </MudText>
+                                <MudStack Row="true" Spacing="2">
+                                    <MudButton Href="/auth/login?returnUrl=/quiz"
+                                               Variant="Variant.Filled"
+                                               Color="Color.Primary">
+                                        Войти
+                                    </MudButton>
+                                    <MudButton Href="/auth/register?returnUrl=/quiz"
+                                               Variant="Variant.Outlined"
+                                               Color="Color.Primary">
+                                        Регистрация
+                                    </MudButton>
+                                </MudStack>
+                            </MudPaper>
+                        </MudContainer>
+                    </LayoutView>
+                </NotAuthorized>
+            </AuthorizeRouteView>
+            <FocusOnNavigate RouteData="routeData" Selector="h1" />
+        </Found>
+    </Router>
+</CascadingAuthenticationState>

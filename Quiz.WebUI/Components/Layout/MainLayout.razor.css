@@ -67,6 +67,21 @@
     gap: 0.5rem;
 }
 
+.user-name {
+    max-width: 11rem;
+    overflow: hidden;
+    color: #686A7A;
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.logout-form {
+    display: inline-flex;
+    margin: 0;
+}
+
 ::deep .app-content {
     min-height: 100vh;
     padding-top: 72px;
@@ -102,7 +117,8 @@
     }
 
     .brand-copy small,
-    .main-navigation ::deep .home-nav-button {
+    .main-navigation ::deep .home-nav-button,
+    .user-name {
         display: none;
     }
 

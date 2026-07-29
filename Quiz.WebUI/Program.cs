@@ -1,5 +1,4 @@
 using MediatR;
-using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using MudBlazor.Services;
@@ -7,6 +6,7 @@ using Quiz.Application.Quiz.Queries.GetQuizBatch;
 using Quiz.Domain.Questions;
 using Quiz.Infrastructure.Persistence;
 using Quiz.Infrastructure.Persistence.Repositories;
+using Quiz.WebUI.Authentication;
 using Quiz.WebUI.Components;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -31,7 +31,9 @@ builder.Services
     .AddInteractiveServerComponents();
 
 builder.Services.AddMudServices();
-builder.Services.AddScoped<ProtectedLocalStorage>();
+builder.Services.AddQuizAuthentication(
+    builder.Configuration,
+    builder.Environment);
 
 builder.Services.AddMediatR(configuration =>
     configuration.RegisterServicesFromAssemblyContaining<GetQuizBatchQuery>());
@@ -61,8 +63,11 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
+app.UseAuthentication();
+app.UseAuthorization();
 app.UseAntiforgery();
 
+app.MapQuizAuthenticationEndpoints();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 

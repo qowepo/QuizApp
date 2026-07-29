@@ -1,6 +1,7 @@
 @page "/quiz"
+@attribute [Authorize]
 @inject IMediator Mediator
-@inject ProtectedLocalStorage LocalStorage
+@inject AuthenticationStateProvider AuthenticationStateProvider
 @inject ILogger<QuizSession> Logger
 
 <PageTitle>Тренировка — QuizApp</PageTitle>
@@ -311,8 +312,6 @@
 </main>
 
 @code {
-    private const string UserIdStorageKey = "quiz-app-user-id";
-
     private static readonly TopicOption[] TopicOptions =
     [
         new(Topic.CSharp, "C#", "Язык, CLR, память и асинхронность", Icons.Material.Filled.Code, "violet"),
@@ -346,42 +345,23 @@
     private bool IsCodeAnalysisQuestion =>
         CurrentQuestion.Text.Contains('\n');
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    protected override async Task OnInitializedAsync()
     {
-        if (!firstRender)
+        var authenticationState =
+            await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var subject = authenticationState.User.FindFirst("sub")?.Value;
+
+        if (Guid.TryParse(subject, out var authenticatedUserId))
         {
-            return;
+            userId = authenticatedUserId.ToString();
+        }
+        else
+        {
+            errorMessage =
+                "Не удалось определить пользователя. Выйдите и войдите снова.";
         }
 
-        try
-        {
-            var storedUserId = await LocalStorage
-                .GetAsync<string>(UserIdStorageKey);
-
-            if (storedUserId.Success &&
-                Guid.TryParse(storedUserId.Value, out var parsedUserId))
-            {
-                userId = parsedUserId.ToString();
-            }
-            else
-            {
-                userId = Guid.NewGuid().ToString();
-                await LocalStorage.SetAsync(UserIdStorageKey, userId);
-            }
-        }
-        catch (Exception exception)
-        {
-            Logger.LogWarning(
-                exception,
-                "Could not access protected local storage. Using a circuit-scoped user identifier.");
-
-            userId = Guid.NewGuid().ToString();
-        }
-        finally
-        {
-            isInitialized = true;
-            StateHasChanged();
-        }
+        isInitialized = true;
     }
 
     private async Task StartQuizAsync(TopicOption option)

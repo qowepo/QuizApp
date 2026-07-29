@@ -31,6 +31,34 @@
                            StartIcon="@Icons.Material.Filled.Bolt">
                     Тренировка
                 </MudButton>
+                <AuthorizeView>
+                    <Authorized Context="authentication">
+                        <span class="user-name">
+                            @authentication.User.Identity?.Name
+                        </span>
+                        <form method="post" action="/auth/logout" class="logout-form">
+                            <AntiforgeryToken />
+                            <MudButton ButtonType="ButtonType.Submit"
+                                       Variant="Variant.Text"
+                                       Color="Color.Inherit"
+                                       StartIcon="@Icons.Material.Filled.Logout">
+                                Выйти
+                            </MudButton>
+                        </form>
+                    </Authorized>
+                    <NotAuthorized>
+                        <MudButton Href="/auth/login?returnUrl=/quiz"
+                                   Variant="Variant.Text"
+                                   Color="Color.Inherit">
+                            Войти
+                        </MudButton>
+                        <MudButton Href="/auth/register?returnUrl=/quiz"
+                                   Variant="Variant.Outlined"
+                                   Color="Color.Primary">
+                            Регистрация
+                        </MudButton>
+                    </NotAuthorized>
+                </AuthorizeView>
             </nav>
         </div>
     </MudAppBar>

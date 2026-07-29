@@ -31,10 +31,25 @@ public sealed class AuthorizationController(
 
         if (!authentication.Succeeded)
         {
+            var returnUrl =
+                $"{Request.PathBase}{Request.Path}{Request.QueryString}";
+            var screenHint = request.GetParameter("screen_hint")?.ToString();
+
+            if (string.Equals(
+                    screenHint,
+                    "signup",
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                return RedirectToAction(
+                    "Register",
+                    "Account",
+                    new { returnUrl });
+            }
+
             return Challenge(
                 new AuthenticationProperties
                 {
-                    RedirectUri = $"{Request.PathBase}{Request.Path}{Request.QueryString}"
+                    RedirectUri = returnUrl
                 },
                 IdentityConstants.ApplicationScheme);
         }

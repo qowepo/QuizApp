@@ -89,45 +89,45 @@ public static class IdentityDatabaseInitializer
         if (await applicationManager.FindByClientIdAsync(webClientId, cancellationToken) is null)
         {
             var webClientSecret = configuration["IdentityClients:WebBff:ClientSecret"];
-            if (string.IsNullOrWhiteSpace(webClientSecret))
-            {
-                throw new InvalidOperationException(
-                    "IdentityClients:WebBff:ClientSecret must be supplied through user secrets or an environment variable.");
-            }
-
             var redirectUri = configuration["IdentityClients:WebBff:RedirectUri"]
                 ?? "https://localhost:7087/signin-oidc";
             var postLogoutRedirectUri = configuration["IdentityClients:WebBff:PostLogoutRedirectUri"]
-                ?? "https://localhost:7087/";
+                ?? "https://localhost:7087/signout-callback-oidc";
 
-            await applicationManager.CreateAsync(
-                new OpenIddictApplicationDescriptor
+            var webClient = new OpenIddictApplicationDescriptor
+            {
+                ClientId = webClientId,
+                ClientType = string.IsNullOrWhiteSpace(webClientSecret)
+                    ? ClientTypes.Public
+                    : ClientTypes.Confidential,
+                ConsentType = ConsentTypes.Implicit,
+                DisplayName = "Quiz Web BFF",
+                RedirectUris = { new Uri(redirectUri) },
+                PostLogoutRedirectUris = { new Uri(postLogoutRedirectUri) },
+                Permissions =
                 {
-                    ClientId = webClientId,
-                    ClientSecret = webClientSecret,
-                    ClientType = ClientTypes.Confidential,
-                    ConsentType = ConsentTypes.Implicit,
-                    DisplayName = "Quiz Web BFF",
-                    RedirectUris = { new Uri(redirectUri) },
-                    PostLogoutRedirectUris = { new Uri(postLogoutRedirectUri) },
-                    Permissions =
-                    {
-                        Permissions.Endpoints.Authorization,
-                        Permissions.Endpoints.EndSession,
-                        Permissions.Endpoints.Token,
-                        Permissions.GrantTypes.AuthorizationCode,
-                        Permissions.GrantTypes.RefreshToken,
-                        Permissions.ResponseTypes.Code,
-                        Permissions.Prefixes.Scope + Scopes.Email,
-                        Permissions.Prefixes.Scope + Scopes.Profile,
-                        Permissions.Prefixes.Scope + Scopes.Roles,
-                        Permissions.Prefixes.Scope + IdentityScopes.QuizRead,
-                        Permissions.Prefixes.Scope + IdentityScopes.QuizAnswer,
-                        Permissions.Prefixes.Scope + IdentityScopes.ProgressRead,
-                        Requirements.Features.ProofKeyForCodeExchange
-                    }
-                },
-                cancellationToken);
+                    Permissions.Endpoints.Authorization,
+                    Permissions.Endpoints.EndSession,
+                    Permissions.Endpoints.Token,
+                    Permissions.GrantTypes.AuthorizationCode,
+                    Permissions.GrantTypes.RefreshToken,
+                    Permissions.ResponseTypes.Code,
+                    Permissions.Prefixes.Scope + Scopes.Email,
+                    Permissions.Prefixes.Scope + Scopes.Profile,
+                    Permissions.Prefixes.Scope + Scopes.Roles,
+                    Permissions.Prefixes.Scope + IdentityScopes.QuizRead,
+                    Permissions.Prefixes.Scope + IdentityScopes.QuizAnswer,
+                    Permissions.Prefixes.Scope + IdentityScopes.ProgressRead,
+                    Requirements.Features.ProofKeyForCodeExchange
+                }
+            };
+
+            if (!string.IsNullOrWhiteSpace(webClientSecret))
+            {
+                webClient.ClientSecret = webClientSecret;
+            }
+
+            await applicationManager.CreateAsync(webClient, cancellationToken);
         }
 
         const string serviceClientId = "quiz-service-client";
@@ -136,8 +136,7 @@ public static class IdentityDatabaseInitializer
             var serviceClientSecret = configuration["IdentityClients:Service:ClientSecret"];
             if (string.IsNullOrWhiteSpace(serviceClientSecret))
             {
-                throw new InvalidOperationException(
-                    "IdentityClients:Service:ClientSecret must be supplied through user secrets or an environment variable.");
+                return;
             }
 
             await applicationManager.CreateAsync(

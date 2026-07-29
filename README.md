@@ -58,20 +58,23 @@ The first independently deployable boundary is now available under
 
 - `Quiz.Identity.Application` — account use-case contracts, role names, scopes,
   and resource identifiers.
-- `Quiz.Identity.Infrastructure` — ASP.NET Core Identity stores, PostgreSQL
+- `Quiz.Identity.Infrastructure` — ASP.NET Core Identity stores, SQLite
   `IdentityDbContext`, and account operations.
 - `Quiz.Identity.Api` — OpenID Connect/OAuth 2.0 server built with OpenIddict,
   login/registration UI, token endpoints, migrations, client/scope seeding, and
   health checks.
 
-The Identity Service owns its PostgreSQL database. It does not reference the
-current quiz domain or SQLite database.
+The Identity Service owns `identity.db`. It does not reference the quiz domain
+or the separate `quiz.db` database.
 
 ```text
-Browser / future BFF ── Authorization Code + PKCE ──> Identity Service
-Internal service      ── Client Credentials ─────────> Identity Service
-                                                         │
-                                                         └── PostgreSQL
+Browser ── secure cookie ──> Quiz.WebUI
+                               │
+                               ├── OIDC Code + PKCE ──> Identity Service
+                               │                          └── identity.db
+                               │
+                               └── MediatR ───────────> Quiz use cases
+                                                          └── quiz.db
 ```
 
 Supported endpoints:
@@ -83,10 +86,16 @@ Supported endpoints:
 - `/connect/logout`
 - `/health`
 
-Access tokens are signed JWTs with a 15-minute lifetime. Browser sessions use
-Authorization Code + PKCE and can receive refresh tokens. Internal services use
-Client Credentials. Development certificates are local-only; production must
-provide managed signing and encryption certificates.
+The `/quiz` route is protected. Browser authentication uses Authorization Code
++ PKCE; WebUI creates an HTTP-only secure cookie and reads the stable user id
+from the OIDC `sub` claim. OAuth tokens are not stored in that cookie because
+quiz use cases still run in-process through MediatR. When the assessment HTTP API
+is extracted, tokens should be kept in a server-side BFF token store.
+
+The local `quiz-web-bff` client is public and protected by PKCE, so no secret is
+required for development. Supplying `Authentication__ClientSecret` to WebUI and
+`IdentityClients__WebBff__ClientSecret` to Identity makes a fresh deployment use
+a confidential client.
 
 ## Important business rules
 
@@ -108,80 +117,58 @@ provide managed signing and encryption certificates.
 - SQLite
 - Clean Architecture and Tactical DDD
 
-## Database
+## Databases
 
-The SQLite connection string is:
+Each executable owns a separate SQLite database:
 
 ```text
-Data Source=quiz.db
+Quiz.WebUI        → Data Source=quiz.db
+Quiz.Identity.Api → Data Source=identity.db
 ```
 
-The path is resolved against the `Quiz.WebUI` content root. On startup,
-`Database.Migrate()` automatically creates `quiz.db` and applies every pending
-migration. The database file is intentionally excluded from Git.
+Relative paths are resolved against the corresponding application's content
+root. Both applications call `Database.Migrate()` on Development startup, so the
+files are created automatically. Both database files are excluded from Git.
 
 ## Build and run
+
+Trust the local ASP.NET Core development certificate once:
+
+```powershell
+dotnet dev-certs https --trust
+```
+
+Restore and build the solution:
 
 ```powershell
 dotnet restore QuizApp.sln
 dotnet build QuizApp.sln
-dotnet run --project Quiz.WebUI
 ```
 
-Open the URL printed by ASP.NET Core and navigate to `/quiz`.
-
-### Run the Identity Service
-
-Start its PostgreSQL container:
+Run both startup projects in separate terminals. Start Identity first:
 
 ```powershell
-$env:QUIZ_IDENTITY_DB_PASSWORD = "<choose-a-local-database-password>"
-docker compose -f compose.identity.yml up -d
+dotnet run --project Services/Identity/Quiz.Identity.Api --launch-profile https
 ```
 
-Configure the application in the same PowerShell session and run it:
+Then start WebUI:
 
 ```powershell
-$env:ConnectionStrings__IdentityDatabase = "Host=localhost;Port=5434;Database=quiz_identity;Username=quiz_identity;Password=$env:QUIZ_IDENTITY_DB_PASSWORD"
-$env:IdentityClients__WebBff__ClientSecret = "<choose-a-long-random-bff-secret>"
-$env:IdentityClients__Service__ClientSecret = "<choose-a-long-random-service-secret>"
-
-dotnet run --project Services/Identity/Quiz.Identity.Api
+dotnet run --project Quiz.WebUI --launch-profile https
 ```
 
-Open `https://localhost:7281/account/register`. In Development, the service
-automatically applies its migrations and seeds roles, scopes, and OAuth clients.
+Open `https://localhost:7087`. Use the header buttons to register or sign in.
+Opening `/quiz` while anonymous automatically starts the OIDC login flow.
 
-To verify the machine-to-machine flow:
+In Visual Studio, configure both `Quiz.Identity.Api` and `Quiz.WebUI` as startup
+projects, with Identity listed first.
 
-```powershell
-$body = @{
-  grant_type    = "client_credentials"
-  client_id     = "quiz-service-client"
-  client_secret = $env:IdentityClients__Service__ClientSecret
-  scope         = "quiz.read"
-}
+No database server, Docker container, database password, or OAuth client secret
+is required for this local setup.
 
-Invoke-RestMethod `
-  -Method Post `
-  -Uri "https://localhost:7281/connect/token" `
-  -ContentType "application/x-www-form-urlencoded" `
-  -Body $body
-```
-
-Passwords and OAuth client secrets are never stored in tracked configuration.
-For local development use environment variables or .NET user secrets. Production
-must supply the same keys through a managed secret store:
-
-```text
-ConnectionStrings__IdentityDatabase
-IdentityClients__WebBff__ClientSecret
-IdentityClients__Service__ClientSecret
-```
-
-The next migration step is to turn `Quiz.WebUI` into a BFF/OIDC client, replace
-the temporary local browser user id with the token `sub` claim, and then extract
-the assessment API behind the `quiz-api` resource.
+The next architectural extraction is an Assessment API behind the `quiz-api`
+resource. At that point WebUI becomes a full BFF: it calls the API with a bearer
+token while the browser continues to receive only the secure session cookie.
 
 ## Troubleshooting
 

@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Quiz.Identity.Application.Accounts;
+using Quiz.Identity.Application.Authorization;
 using Quiz.Identity.Infrastructure.Accounts;
 using Quiz.Identity.Infrastructure.Persistence;
 using Quiz.Identity.Api.Setup;
@@ -11,9 +13,17 @@ var connectionString = builder.Configuration.GetConnectionString("IdentityDataba
     ?? throw new InvalidOperationException(
         "Connection string 'IdentityDatabase' is not configured.");
 
+var connectionStringBuilder = new SqliteConnectionStringBuilder(connectionString);
+if (!Path.IsPathRooted(connectionStringBuilder.DataSource))
+{
+    connectionStringBuilder.DataSource = Path.Combine(
+        builder.Environment.ContentRootPath,
+        connectionStringBuilder.DataSource);
+}
+
 builder.Services.AddDbContext<IdentityDbContext>(options =>
 {
-    options.UseNpgsql(connectionString);
+    options.UseSqlite(connectionStringBuilder.ConnectionString);
     options.UseOpenIddict();
 });
 
@@ -67,6 +77,15 @@ builder.Services
             .RequireProofKeyForCodeExchange();
         options.AllowRefreshTokenFlow();
         options.AllowClientCredentialsFlow();
+
+        options.RegisterScopes(
+            "email",
+            "profile",
+            "roles",
+            IdentityScopes.QuizRead,
+            IdentityScopes.QuizAnswer,
+            IdentityScopes.ProgressRead,
+            IdentityScopes.QuestionsManage);
 
         options.SetAccessTokenLifetime(TimeSpan.FromMinutes(15));
         options.SetRefreshTokenLifetime(TimeSpan.FromDays(14));
